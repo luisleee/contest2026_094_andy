@@ -1,3 +1,20 @@
-# Minimal placeholder defconfig for contest2026_000_board.
-# Not intended to boot real hardware; sample only.
-CONFIG_ARCH_BOARD_CONTEST2026_000_BOARD=y
+# Minimal placeholder defconfig for the contest D13X board.
+# This enables the custom board/chip discovery path only.
+
+CONFIG_ARCH_RISCV=y
+CONFIG_ARCH_CHIP_RISCV_CUSTOM=y
+CONFIG_ARCH_CHIP_CUSTOM=y
+CONFIG_ARCH_CHIP_CUSTOM_NAME="artinchip_d13x"
+CONFIG_ARCH_CHIP_CUSTOM_DIR="../contest2026_094_andy/chip/d13x"
+CONFIG_ARCH_CHIP_CUSTOM_DIR_RELPATH=y
+
+CONFIG_ARCH_BOARD_CUSTOM=y
+CONFIG_ARCH_BOARD_CUSTOM_NAME="demo88-nor"
+CONFIG_ARCH_BOARD_CUSTOM_DIR="../contest2026_094_andy/board/d13x/demo88-nor"
+CONFIG_ARCH_BOARD_CUSTOM_DIR_RELPATH=y
+
+CONFIG_CONTEST2026_094_ANDY_BOARD_DEMO88_NOR=y
+
+CONFIG_RR_INTERVAL=200
+CONFIG_INIT_ENTRYPOINT="nsh_main"
+CONFIG_IDLETHREAD_STACKSIZE=2048
