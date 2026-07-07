@@ -1,0 +1,28 @@
+#
+# Contest 2026 custom D13X chip stub
+#
+
+if ARCH_CHIP_CUSTOM
+
+comment "Contest 2026 D13X Chip Options"
+
+choice
+    prompt "Custom RISC-V chip selection"
+    default ARCH_CHIP_ARTINCHIP_D13X
+
+config ARCH_CHIP_ARTINCHIP_D13X
+    bool "ArtInChip D13X (contest stub)"
+    select ARCH_RV32
+    select ARCH_RV_ISA_M
+    select ARCH_RV_ISA_A
+    select ARCH_RV_ISA_C
+    select ARCH_HAVE_FPU
+    select ARCH_FPU
+    select ARCH_HAVE_RESET
+    help
+      Minimal custom chip entry for the contest D13X port. This only
+      provides build glue and placeholder low-level code.
+
+endchoice
+
+endif

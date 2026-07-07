@@ -1,0 +1,12 @@
+############################################################################
+# contest2026_094_andy/chip/d13x/Make.defs
+#
+# Minimal legacy make glue for the custom D13X chip stub.
+############################################################################
+
+include common/Make.defs
+
+HEAD_ASRC += d13x_head.S
+CHIP_CSRCS += d13x_irq.c
+CHIP_CSRCS += d13x_start.c
+CHIP_CSRCS += d13x_boot.c
