@@ -1,11 +1,13 @@
 #
-# Contest 2026 team 000 board placeholder
+# Contest 2026 demo88-nor board placeholder
 #
 
-if ARCH_BOARD_CONTEST2026_000_BOARD
+if ARCH_BOARD_CUSTOM
 
-config ARCH_BOARD_CONTEST2026_000_BOARD_TAG
-	string "Board tag"
-	default "contest2026_000_board"
+config CONTEST2026_094_ANDY_BOARD_DEMO88_NOR
+    bool "contest2026_094_andy demo88-nor"
+    default y
+    help
+      Placeholder board entry for the custom D13X board tree.
 
 endif

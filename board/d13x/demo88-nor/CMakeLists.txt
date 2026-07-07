@@ -1,4 +1,8 @@
-# Contest 2026 team 000 board placeholder
-if(CONFIG_ARCH_BOARD_CONTEST2026_000_BOARD)
-  add_subdirectory(src)
+# Contest 2026 demo88-nor board placeholder
+
+add_subdirectory(src)
+
+if(EXISTS ${NUTTX_BOARD_ABS_DIR}/scripts/ld.script)
+  set_property(GLOBAL PROPERTY LD_SCRIPT
+               ${NUTTX_BOARD_ABS_DIR}/scripts/ld.script)
 endif()
