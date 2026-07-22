@@ -1,4 +1,4 @@
-# Contest 2026 demo88-nor board placeholder
+# Contest 2026 team 094 demo88-nor board
 
 add_subdirectory(src)
 

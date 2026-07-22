@@ -1,41 +1,57 @@
 OUTPUT_ARCH(riscv)
 ENTRY(__start)
 
+D13X_SRAM_BASE = 0x30040000;
+D13X_SRAM_RESERVED = 0x4000;
+D13X_SRAM_LENGTH = 0x100000 - D13X_SRAM_RESERVED;
+
 MEMORY
 {
-    sram (rwx) : ORIGIN = 0x30040000, LENGTH = 64K
+    sram (rwx) : ORIGIN = D13X_SRAM_BASE + D13X_SRAM_RESERVED,
+                 LENGTH = D13X_SRAM_LENGTH
 }
 
 SECTIONS
 {
     .text : {
         _stext = .;
+        *(.text.entry)
         *(.text .text.*)
         *(.rodata .rodata.*)
+        *(.srodata .srodata.*)
+        . = ALIGN(4);
+        _sinit = ABSOLUTE(.);
+        *(.init)
+        *(.fini)
+        KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)))
+        KEEP(*(.init_array))
+        KEEP(*(.fini_array))
         . = ALIGN(4);
         _etext = .;
+        _eronly = .;
     } > sram
 
     .data : {
         _sdata = .;
+        PROVIDE(__global_pointer$ = . + 0x800);
         *(.data .data.*)
         *(.sdata .sdata.*)
         . = ALIGN(4);
         _edata = .;
     } > sram
 
-    .bss : {
+    .bss (NOLOAD) : {
         _sbss = .;
         *(.bss .bss.*)
         *(.sbss .sbss.*)
         *(COMMON)
-        . = ALIGN(16);
+        . = ALIGN(4);
         _ebss = .;
     } > sram
 
     .stack (NOLOAD) : {
         . = ALIGN(16);
-        . = . + 4096;
+        . = . + 8192;
         . = ALIGN(16);
         _estack = .;
     } > sram
