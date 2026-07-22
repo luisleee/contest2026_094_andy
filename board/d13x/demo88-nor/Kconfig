@@ -1,5 +1,5 @@
 #
-# Contest 2026 demo88-nor board placeholder
+# Contest 2026 team 094 demo88-nor board
 #
 
 if ARCH_BOARD_CUSTOM
@@ -8,6 +8,6 @@ config CONTEST2026_094_ANDY_BOARD_DEMO88_NOR
     bool "contest2026_094_andy demo88-nor"
     default y
     help
-      Placeholder board entry for the custom D13X board tree.
+      Enable the ArtInChip D133CBS demo88-nor board port for team 094.
 
 endif

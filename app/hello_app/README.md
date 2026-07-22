@@ -1,4 +1,10 @@
-# hello_app（应用形态样例）
+# hello_app
 
-映射到 openvela `packages/demos/contest2026_000_hello_app`。
-队伍把应用代码放在本目录下。
+该目录映射到 openvela `packages/demos/contest2026_094_hello_app`。
+
+应用会注册为 NSH builtin 命令：
+
+```text
+nsh> hello_app
+Hello from openvela contest 2026 team 094 (andy)!
+```

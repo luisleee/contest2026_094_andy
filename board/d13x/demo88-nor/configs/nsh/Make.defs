@@ -1,0 +1,1 @@
+include $(TOPDIR)/../vendor/artinchip/boards/d13x/demo88-nor/scripts/Make.defs

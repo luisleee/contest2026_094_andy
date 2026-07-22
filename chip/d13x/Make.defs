@@ -1,12 +1,110 @@
 ############################################################################
 # contest2026_094_andy/chip/d13x/Make.defs
 #
-# Minimal legacy make glue for the custom D13X chip stub.
+# Minimal legacy make glue for the custom D13X chip.
 ############################################################################
 
-include common/Make.defs
+SRC_D13X_PATH=d13x
 
-HEAD_ASRC += d13x_head.S
-CHIP_CSRCS += d13x_irq.c
-CHIP_CSRCS += d13x_start.c
-CHIP_CSRCS += d13x_boot.c
+DEPPATH += --dep-path $(SRC_D13X_PATH)
+VPATH += :chip/$(SRC_D13X_PATH)
+
+ARCH_D13X_SRC_PATH := $(AIC_SRCDIR)/$(SRC_D13X_PATH)
+ARCH_D13X_PARENT_SRC_PATH := $(AIC_SRCDIR)
+
+CFLAGS += ${INCDIR_PREFIX}$(ARCH_D13X_SRC_PATH)
+CFLAGS += ${INCDIR_PREFIX}$(ARCH_D13X_PARENT_SRC_PATH)
+CFLAGS += ${INCDIR_PREFIX}${INCLUDES}
+CFLAGS += ${INCDIR_PREFIX}${INCLUDES}/include/drv
+CFLAGS += ${INCDIR_PREFIX}${INCLUDES}/include/hal
+
+HEAD_ASRC += $(SRC_D13X_PATH)/d13x_head.S
+CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_irq.c
+CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_start.c
+CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_boot.c
+CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_serial.c
+CHIP_CSRCS += d12x/d12x_clk_cfg.c
+CHIP_CSRCS += d12x/d12x_reset_cfg.c
+CHIP_CSRCS += d12x/sys_freq.c
+CHIP_CSRCS += d12x/aic_gpio_id.c
+CHIP_CSRCS += d12x/boot_param.c
+CHIP_CSRCS += common/utils/aic_time.c
+CHIP_CSRCS += common/utils/aic_string.c
+CHIP_CSRCS += common/utils/pinmux_utils.c
+CHIP_CSRCS += common/private_param/private_param.c
+CHIP_CSRCS += common/partition/disk_part.c
+CHIP_CSRCS += common/partition/partition.c
+CHIP_CSRCS += common/crc32/crc32.c
+CHIP_CSRCS += hal/cmu/aic_hal_clk.c
+CHIP_CSRCS += hal/cmu/aic_hal_fixed_rate_clk.c
+CHIP_CSRCS += hal/cmu/aic_hal_pll_clk.c
+CHIP_CSRCS += hal/cmu/v1/aic_hal_cpu_clk.c
+CHIP_CSRCS += hal/cmu/v1/aic_hal_disp_clk.c
+CHIP_CSRCS += hal/cmu/v1/aic_hal_fixed_parent_clk.c
+CHIP_CSRCS += hal/cmu/v1/aic_hal_multi_parent_clk.c
+CHIP_CSRCS += hal/cmu/v1/aic_hal_reset.c
+CHIP_CSRCS += hal/gpio/aic_hal_gpio.c
+CHIP_CSRCS += hal/uart/aic_hal_uart.c
+
+ifeq ($(CONFIG_DRIVER_QSPI_HAL_EN),y)
+CHIP_CSRCS += hal/qspi/qspi_internal.c
+ifeq ($(CONFIG_AIC_QSPI_DRV_V11),y)
+CHIP_CSRCS += hal/qspi/hal_qspi_v1x.c
+else ifeq ($(CONFIG_AIC_QSPI_DRV_V12),y)
+CHIP_CSRCS += hal/qspi/hal_qspi_v1x.c
+else
+CHIP_CSRCS += hal/qspi/hal_qspi_v2x.c
+endif
+endif
+
+ifeq ($(CONFIG_AIC_QSPI_DRV),y)
+CHIP_CSRCS += drv/qspi/drv_qspi.c
+endif
+
+ifeq ($(CONFIG_USING_MTD),y)
+CHIP_CSRCS += drv/mtd/mtdcore.c
+CHIP_CSRCS += drv/mtd/mtdparts.c
+endif
+
+ifeq ($(CONFIG_AIC_SPINOR_DRV),y)
+CHIP_CSRCS += drv/spinor/spinor_flash.c
+CHIP_CSRCS += drv/spinor/partition.c
+CHIP_CSRCS += drv/spinor/aic_flash_xip_def.c
+endif
+
+ifeq ($(CONFIG_USING_SFUD),y)
+CHIP_CSRCS += drv/sfud/sfud.c
+CHIP_CSRCS += drv/sfud/sfud_sfdp.c
+CHIP_CSRCS += drv/sfud/sfud_qe.c
+CHIP_CSRCS += drv/sfud/sfud_private.c
+endif
+
+VPATH += :chip/d12x
+VPATH += :chip/common/utils
+VPATH += :chip/common/private_param
+VPATH += :chip/common/partition
+VPATH += :chip/common/crc32
+VPATH += :chip/hal/cmu
+VPATH += :chip/hal/cmu/v1
+VPATH += :chip/hal/gpio
+VPATH += :chip/hal/uart
+VPATH += :chip/hal/qspi
+VPATH += :chip/drv/qspi
+VPATH += :chip/drv/mtd
+VPATH += :chip/drv/spinor
+VPATH += :chip/drv/sfud
+
+DEPPATH += --dep-path chip/d12x
+DEPPATH += --dep-path chip/common/utils
+DEPPATH += --dep-path chip/common/private_param
+DEPPATH += --dep-path chip/common/partition
+DEPPATH += --dep-path chip/common/crc32
+DEPPATH += --dep-path chip/hal/cmu
+DEPPATH += --dep-path chip/hal/cmu/v1
+DEPPATH += --dep-path chip/hal/gpio
+DEPPATH += --dep-path chip/hal/uart
+DEPPATH += --dep-path chip/hal/qspi
+DEPPATH += --dep-path chip/drv/qspi
+DEPPATH += --dep-path chip/drv/mtd
+DEPPATH += --dep-path chip/drv/spinor
+DEPPATH += --dep-path chip/drv/sfud

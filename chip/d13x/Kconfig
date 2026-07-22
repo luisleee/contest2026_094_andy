@@ -8,21 +8,46 @@ comment "Contest 2026 D13X Chip Options"
 
 choice
     prompt "Custom RISC-V chip selection"
-    default ARCH_CHIP_ARTINCHIP_D13X
+    default ARCH_CHIP_D13X
 
-config ARCH_CHIP_ARTINCHIP_D13X
+config ARCH_CHIP_D13X
     bool "ArtInChip D13X (contest stub)"
     select ARCH_RV32
     select ARCH_RV_ISA_M
     select ARCH_RV_ISA_A
     select ARCH_RV_ISA_C
-    select ARCH_HAVE_FPU
-    select ARCH_FPU
     select ARCH_HAVE_RESET
+    select ONESHOT
+    select ONESHOT_COUNT
+    select ONESHOT_FAST_DIVISION
+    select ALARM_ARCH
     help
-      Minimal custom chip entry for the contest D13X port. This only
-      provides build glue and placeholder low-level code.
+      Minimal custom chip entry for the contest D13X port. This provides
+      a SRAM-loaded reset path, common RISC-V trap integration, and the
+      base chip headers needed for further board and driver bring-up.
 
 endchoice
+
+config AIC_BOOTLOADER_MEM_AUTO
+    bool "Auto derive D13X bootloader text base"
+    default n
+    help
+      Keep this disabled for the contest port so the bootloader SRAM/PSRAM
+      layout stays explicit and pack-side address replacement remains stable.
+
+config AIC_BOOTLOADER_TEXT_BASE
+    hex "D13X bootloader entry address"
+    default 0x40200100
+    help
+      The boot image header consumes the first 256 bytes, so the code entry
+      address starts at 0x40200100 while the loader body is fetched from
+      0x40200000.
+
+config AIC_BOOTLOADER_LOAD_BASE
+    hex "D13X bootloader load address"
+    default 0x40200000
+    help
+      This should stay 0x100 bytes below the text base to match the ArtInChip
+      boot image header layout used by mk_image.py.
 
 endif
