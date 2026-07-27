@@ -96,6 +96,10 @@ extern "C"
 #define UART6_BASE             0x18716000UL
 #define UART7_BASE             0x18717000UL
 #define UART_BASE(n)           (UART0_BASE + ((n) * 0x1000UL))
+#define LCD_BASE               0x18800000UL
+#define LVDS_BASE              0x18810000UL
+#define MIPI_DSI_BASE          0x18820000UL
+#define DE_BASE                0x18a00000UL
 #define WDT_BASE               0x19000000UL
 #define WRI_BASE               0x1900f000UL
 #define SID_BASE               0x19010000UL
@@ -113,10 +117,13 @@ extern "C"
 #define TSEN_BASE              0x19253000UL
 #define THS_BASE               TSEN_BASE
 #define CIR_BASE               0x19260000UL
+#define PSRAM_BASE             0x40000000UL
+#define PSRAM_SIZE             0x00800000UL
 
 #define D13X_IRQN_PERI_BASE    16U
 #define D13X_IRQN_CPU_TIMER    7U
 #define D13X_IRQN_DMA          32U
+#define D13X_IRQN_GPIOA        68U
 #define D13X_IRQN_UART0        76U
 #define D13X_IRQN_UART1        77U
 #define D13X_IRQN_UART2        78U
@@ -126,7 +133,9 @@ extern "C"
 #define D13X_IRQN_UART6        82U
 #define D13X_IRQN_UART7        83U
 #define D13X_IRQN_I2C0         84U
-#define D13X_IRQN_LAST         D13X_IRQN_I2C0
+#define D13X_IRQN_I2C1         85U
+#define D13X_IRQN_I2C2         86U
+#define D13X_IRQN_LAST         D13X_IRQN_I2C2
 
 #ifndef __ASSEMBLY__
 typedef enum IRQn
@@ -141,6 +150,7 @@ typedef enum IRQn
   Machine_External_IRQn    = 11U,
 
   DMA_IRQn                 = RISCV_IRQ_ASYNC + D13X_IRQN_DMA,
+  GPIOA_IRQn               = RISCV_IRQ_ASYNC + D13X_IRQN_GPIOA,
   UART0_IRQn               = RISCV_IRQ_ASYNC + D13X_IRQN_UART0,
   UART1_IRQn               = RISCV_IRQ_ASYNC + D13X_IRQN_UART1,
   UART2_IRQn               = RISCV_IRQ_ASYNC + D13X_IRQN_UART2,
@@ -150,6 +160,8 @@ typedef enum IRQn
   UART6_IRQn               = RISCV_IRQ_ASYNC + D13X_IRQN_UART6,
   UART7_IRQn               = RISCV_IRQ_ASYNC + D13X_IRQN_UART7,
   I2C0_IRQn                = RISCV_IRQ_ASYNC + D13X_IRQN_I2C0,
+  I2C1_IRQn                = RISCV_IRQ_ASYNC + D13X_IRQN_I2C1,
+  I2C2_IRQn                = RISCV_IRQ_ASYNC + D13X_IRQN_I2C2,
 
   MAX_IRQn
 } IRQn_Type;

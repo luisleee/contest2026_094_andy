@@ -1,0 +1,7 @@
+############################################################################
+# Contest 2026 team 094 GT911 probe app
+############################################################################
+
+ifneq ($(CONFIG_LVX_USE_DEMO_CONTEST2026_094_GT911_TEST),)
+CONFIGURED_APPS += $(APPDIR)/packages/demos/contest2026_094_gt911_test
+endif

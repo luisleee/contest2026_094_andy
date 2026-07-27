@@ -1,0 +1,13 @@
+#
+# Contest 2026 team 094 LVGL framebuffer test app
+#
+
+config LVX_USE_DEMO_CONTEST2026_094_LVGL_TEST
+	bool "Contest 2026 team 094 LVGL framebuffer test"
+	default n
+	depends on GRAPHICS_LVGL && LV_USE_NUTTX
+	depends on VIDEO_FB && FB_UPDATE
+	depends on INPUT_TOUCHSCREEN && LV_USE_NUTTX_TOUCHSCREEN
+	---help---
+		Enable the lvgl_test NSH command. It renders a bounded interactive
+		1024x600 LVGL test page through /dev/fb0 and /dev/input0.

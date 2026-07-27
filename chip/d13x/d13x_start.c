@@ -23,19 +23,6 @@ extern void aic_board_pinmux_init(void);
 extern void aic_board_sysclk_init(void);
 extern void up_putc(int ch);
 
-static void d13x_raw_uart_putc(int ch)
-{
-  *(volatile uint32_t *)(UART0_BASE + 0x00) = (uint32_t)ch;
-}
-
-static void d13x_raw_uart_puts(const char *str)
-{
-  while (*str != '\0')
-    {
-      d13x_raw_uart_putc(*str++);
-    }
-}
-
 static void d13x_boot_puts(const char *str)
 {
   while (*str != '\0')
@@ -82,10 +69,7 @@ void d13x_start(uint32_t mhartid)
 {
   uint8_t *dest;
 
-  d13x_raw_uart_puts("C0\r\n");
-  d13x_raw_uart_puts("C1\r\n");
   d13x_boot_puts("\n[D13X] start\n");
-  d13x_raw_uart_puts("C2\r\n");
 
 #ifdef CONFIG_ARCH_FPU
   riscv_fpuconfig();

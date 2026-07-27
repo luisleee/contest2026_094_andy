@@ -10,6 +10,10 @@
 
   <project path="contest2026_094_andy" name="contest2026_094_andy">
     <linkfile src="app/hello_app" dest="packages/demos/contest2026_094_hello_app"/>
+    <linkfile src="app/gt911_test" dest="packages/demos/contest2026_094_gt911_test"/>
+    <linkfile src="app/buzzer_test" dest="packages/demos/contest2026_094_buzzer_test"/>
+    <linkfile src="app/fb_test" dest="packages/demos/contest2026_094_fb_test"/>
+    <linkfile src="app/lvgl_test" dest="packages/demos/contest2026_094_lvgl_test"/>
     <linkfile src="board/d13x/demo88-nor" dest="vendor/artinchip/boards/d13x/demo88-nor"/>
     <linkfile src="chip/d13x" dest="vendor/artinchip/chips/artinchips/d13x"/>
   </project>

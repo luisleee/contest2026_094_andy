@@ -3,6 +3,7 @@
  ****************************************************************************/
 
 #include <stdint.h>
+#include <syslog.h>
 
 #include <nuttx/board.h>
 #include <arch/chip/chip.h>
@@ -11,6 +12,7 @@
 
 extern void d13x_board_initialize(void);
 extern void d13x_chip_late_boot(void);
+extern int d13x_board_bringup(void);
 
 static void board_boot_putc(int ch)
 {
@@ -35,22 +37,31 @@ static void board_boot_puts(const char *str)
 #ifdef CONFIG_BOARD_EARLY_INITIALIZE
 void board_early_initialize(void)
 {
-  board_boot_puts("[D13X] board early\n");
+  board_boot_puts("[D13X] board early\r\n");
   /*
    * TinySPL has already configured the clocks and UART0 pins well enough for
    * NuttX bring-up.  Reprogramming sysclk/pinmux here can silence UART0 or
    * hang before NSH starts, so keep board-early inert until the OS boots.
    */
-  board_boot_puts("[D13X] board early ok\n");
+  board_boot_puts("[D13X] board early ok\r\n");
 }
 #endif
 
 #ifdef CONFIG_BOARD_LATE_INITIALIZE
 void board_late_initialize(void)
 {
-  board_boot_puts("[D13X] board late\n");
+  int ret;
+
+  board_boot_puts("[D13X] board late\r\n");
   d13x_chip_late_boot();
-  board_boot_puts("[D13X] board late ok\n");
+
+  ret = d13x_board_bringup();
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "[D13X] board bringup failed: %d\n", ret);
+    }
+
+  board_boot_puts("[D13X] board late ok\r\n");
 }
 #endif
 
