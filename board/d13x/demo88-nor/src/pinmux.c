@@ -11,17 +11,32 @@
 
 struct aic_pinmux aic_pinmux_config[] =
 {
-#ifdef CONFIG_AIC_USING_UART1
-  {5, PIN_PULL_DIS, 3, "PA.2"},
-  {5, PIN_PULL_UP,  3, "PA.3"},
+#ifdef CONFIG_D13X_I2C2
+  /* Onboard GT911 touch bus. PA.10/PA.11 are configured explicitly by the
+   * board touch initialization when CONFIG_D13X_TOUCH_GT911 is enabled.
+   */
+
+  {4, PIN_PULL_DIS, 3, "PA.8"},
+  {4, PIN_PULL_DIS, 3, "PA.9"},
 #endif
-#ifdef CONFIG_AIC_USING_QSPI0
-  {2, PIN_PULL_UP, 3, "PB.0"},
-  {2, PIN_PULL_UP, 3, "PB.1"},
-  {2, PIN_PULL_UP, 3, "PB.2"},
-  {2, PIN_PULL_UP, 3, "PB.3"},
-  {2, PIN_PULL_UP, 3, "PB.4"},
-  {2, PIN_PULL_UP, 3, "PB.5"},
+#ifdef CONFIG_D13X_PWM1
+  /* Onboard buzzer: PE.11 is PWM1_A on mux function 3. */
+
+  {3, PIN_PULL_DIS, 3, "PE.11"},
+#endif
+#ifdef CONFIG_D13X_DISPLAY
+  /* J18 single-link LVDS. J3 MIPI uses the same pins with function 4. */
+
+  {3, PIN_PULL_DIS, 3, "PD.18"},
+  {3, PIN_PULL_DIS, 3, "PD.19"},
+  {3, PIN_PULL_DIS, 3, "PD.20"},
+  {3, PIN_PULL_DIS, 3, "PD.21"},
+  {3, PIN_PULL_DIS, 3, "PD.22"},
+  {3, PIN_PULL_DIS, 3, "PD.23"},
+  {3, PIN_PULL_DIS, 3, "PD.24"},
+  {3, PIN_PULL_DIS, 3, "PD.25"},
+  {3, PIN_PULL_DIS, 3, "PD.26"},
+  {3, PIN_PULL_DIS, 3, "PD.27"},
 #endif
 };
 

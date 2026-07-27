@@ -1,0 +1,13 @@
+#
+# Contest 2026 team 094 GT911 probe app
+#
+
+config LVX_USE_DEMO_CONTEST2026_094_GT911_TEST
+	bool "Contest 2026 team 094 GT911 test"
+	default n
+	depends on I2C_DRIVER && D13X_TOUCH_GT911 && VIDEO_FB && FB_UPDATE
+	---help---
+		Enable the gt911_test NSH command. It probes the onboard GT911 on
+		/dev/i2c2, reports version/configuration data, and can monitor raw
+		five-point touch frames without enabling the touch input stack. A
+		visual mode draws targets and five-color trails on /dev/fb0.

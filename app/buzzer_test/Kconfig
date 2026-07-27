@@ -1,0 +1,11 @@
+#
+# Contest 2026 team 094 buzzer test app
+#
+
+config LVX_USE_DEMO_CONTEST2026_094_BUZZER_TEST
+	bool "Contest 2026 team 094 buzzer test"
+	default n
+	depends on PWM
+	---help---
+		Enable the buzzer_test NSH command for the demo88-nor onboard buzzer.
+		The command always stops PWM1 after a bounded test duration.

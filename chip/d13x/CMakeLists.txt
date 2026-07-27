@@ -33,6 +33,18 @@ set(SRCS
     ${AIC_HAL_DIR}/gpio/aic_hal_gpio.c
     ${AIC_HAL_DIR}/uart/aic_hal_uart.c)
 
+if(CONFIG_D13X_I2C)
+  list(APPEND SRCS d13x_i2c.c)
+endif()
+
+if(CONFIG_D13X_PWM1)
+  list(APPEND SRCS d13x_pwm.c)
+endif()
+
+if(CONFIG_D13X_DISPLAY)
+  list(APPEND SRCS d13x_fb.c d13x_de.c d13x_lvds.c d13x_panel.c)
+endif()
+
 if(CONFIG_DRIVER_QSPI_HAL_EN)
   list(APPEND SRCS
        ${AIC_HAL_DIR}/qspi/qspi_internal.c)

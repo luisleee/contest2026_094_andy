@@ -20,7 +20,15 @@ CFLAGS += -I$(AIC_HAL_DIR)/gpio
 CFLAGS += -I$(AIC_HAL_DIR)/timer
 CFLAGS += -I$(TOPDIR)/../vendor/artinchip/boards/d13x/demo88-nor/include
 
-CSRCS = board_boot.c pinmux.c sys_clk.c
+CSRCS = board_boot.c board_bringup.c pinmux.c sys_clk.c
+
+ifeq ($(CONFIG_D13X_TOUCH_GT911),y)
+CSRCS += gt911_board.c
+endif
+
+ifeq ($(CONFIG_D13X_GT911_INPUT),y)
+CSRCS += gt911_input.c
+endif
 endif
 
 ifeq ($(CONFIG_ARTINCHIP_BINARY_ONLY),y)

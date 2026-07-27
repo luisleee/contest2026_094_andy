@@ -23,6 +23,18 @@ CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_irq.c
 CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_start.c
 CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_boot.c
 CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_serial.c
+ifeq ($(CONFIG_D13X_I2C),y)
+CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_i2c.c
+endif
+ifeq ($(CONFIG_D13X_PWM1),y)
+CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_pwm.c
+endif
+ifeq ($(CONFIG_D13X_DISPLAY),y)
+CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_fb.c
+CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_de.c
+CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_lvds.c
+CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_panel.c
+endif
 CHIP_CSRCS += d12x/d12x_clk_cfg.c
 CHIP_CSRCS += d12x/d12x_reset_cfg.c
 CHIP_CSRCS += d12x/sys_freq.c

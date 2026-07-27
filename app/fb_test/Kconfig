@@ -1,0 +1,11 @@
+#
+# Contest 2026 team 094 framebuffer test app
+#
+
+config LVX_USE_DEMO_CONTEST2026_094_FB_TEST
+	bool "Contest 2026 team 094 framebuffer test"
+	default n
+	depends on VIDEO_FB && FB_UPDATE
+	---help---
+		Enable the fb_test NSH command. It validates /dev/fb0 and draws an
+		RGB565 color-bar pattern on the demo88-nor 1024x600 LVDS panel.

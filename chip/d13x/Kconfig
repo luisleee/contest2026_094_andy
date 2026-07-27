@@ -50,4 +50,62 @@ config AIC_BOOTLOADER_LOAD_BASE
       This should stay 0x100 bytes below the text base to match the ArtInChip
       boot image header layout used by mk_image.py.
 
+config D13X_I2C
+    bool "D13x polled I2C master support"
+    select I2C
+    select I2C_DRIVER
+    help
+      Enable the D13x DesignWare-compatible I2C lower-half. The current
+      implementation uses polling so it does not depend on CLIC task wakeups.
+
+if D13X_I2C
+
+config D13X_I2C2
+    bool "I2C2 controller"
+    help
+      Enable I2C2 on the demo88-nor touch bus. Board pins are PA.8/PA.9.
+
+endif
+
+config D13X_TOUCH
+    bool "Capacitive touch support"
+    depends on D13X_I2C2
+    help
+      Enable board support for the demo88-nor capacitive touch connector.
+
+config D13X_TOUCH_GT911
+    bool "GT911 touch controller board support"
+    depends on D13X_TOUCH
+    help
+      Enable the demo88-nor PA.10 reset and PA.11 interrupt/address-select
+      sequence and configuration download for the onboard GT911. Select the
+      separate D13X_GT911_INPUT option to register the NuttX input device.
+
+config D13X_GT911_INPUT
+    bool "GT911 polled touchscreen input device"
+    depends on D13X_TOUCH_GT911
+    select INPUT
+    select INPUT_TOUCHSCREEN
+    help
+      Register the onboard GT911 as /dev/input0 using the standard NuttX
+      touchscreen ABI. A kernel thread polls only while the device is open;
+      PA.11 GPIO interrupt delivery remains disabled.
+
+config D13X_PWM1
+    bool "PWM1 controller for the demo88-nor buzzer"
+    select PWM
+    help
+      Enable the D13x PWM1 lower-half. The demo88-nor board routes PWM1_A
+      to the onboard buzzer through PE.11 and registers it as /dev/pwm1.
+
+config D13X_DISPLAY
+    bool "1024x600 LVDS framebuffer support"
+    select DRIVERS_VIDEO
+    select VIDEO_FB
+    select FB_UPDATE
+    help
+      Enable the D13x display engine and single-link LVDS output for the
+      demo88-nor J18 panel. A single RGB565 framebuffer is reserved at the
+      start of the bootloader-initialized PSRAM and registered as /dev/fb0.
+
 endif
