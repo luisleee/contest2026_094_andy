@@ -1,0 +1,11 @@
+#
+# Contest 2026 team 094 SPI NOR read-only test
+#
+
+config LVX_USE_DEMO_CONTEST2026_094_FLASH_TEST
+	bool "Contest 2026 team 094 SPI NOR read-only test"
+	default n
+	depends on MTD && USING_SFUD && AIC_SPINOR_DRV
+	---help---
+		Enable flash_test for JEDEC/SFDP information, partition listing,
+		bounded reads, and non-destructive double-read verification.

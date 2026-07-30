@@ -37,12 +37,12 @@ The burnable image is:
 
 ```text
 vendor/artinchip/pack/prebuilt/d13x_demo88-nor_v1.0.0.img
-SHA-256: de3c220c9fac39cfe5f728e739ca5fe8952979f12fadf251262b735ccd354cde
+SHA-256: e82ae9a414dc454dfb1601b0bf2dccbef93925d188bcd4c8185e261034e801f0
 ```
 
-The corresponding ELF sizes are `text=323048`, `data=1036`, and `bss=82080`.
-Its only load segment is `0x30044000..0x300a737f`, within the configured SRAM
-region.
+The corresponding ELF sizes are `text=366368`, `data=1428`, and `bss=82400`.
+Its load segment uses `0x30044000..0x3009dd93` for file-backed data and ends at
+`0x300b1f7f` after BSS/stack allocation, within the configured SRAM region.
 
 An `img2simg` error about `libselinux.so.1` only affects optional sparse image
 conversion. The raw `.img` above is still generated and is the AiBurn input.
@@ -175,6 +175,34 @@ after approximately five seconds. Reboot and run `rtc_test show` for
 warm-reset retention. Then remove main power with the coin cell installed and
 verify the counter continues after power is restored. The set path waits for
 `TCNT_INIT` completion; `show` and failed set operations print raw RTC state.
+All RTC tests, including coin-cell retention, have passed on the board.
+
+Verify QSPI0, MTD, and the `data` LittleFS partition:
+
+```text
+nsh> ls /dev
+nsh> flash_test info
+nsh> flash_test read 0 64
+nsh> flash_test verify 0 65536
+nsh> mount
+nsh> ls /data
+nsh> flash_test fs write
+nsh> flash_test fs check
+nsh> reboot
+nsh> flash_test fs check
+nsh> flash_test fs clear
+```
+
+`info` must report JEDEC ID `0x852018`, 16 MiB capacity, matching SFUD/MTD
+geometry, and the parsed partitions. `read` performs a bounded hexadecimal
+dump and `verify` requires matching CRC32 values from two reads. This command
+contains no raw erase or write mode. `/dev/nor0` is an MTD inode, not a
+directly openable character device; `flash_test` accesses its registered MTD
+read operation without enabling BCH. Late boot mounts the existing 1 MiB
+`/dev/data` LittleFS partition at `/data`; NuttX creates the mount-point inode
+as part of `mount()`. The `fs` commands only operate on `/data/spi_test.bin`;
+mounting, write/readback, reboot retention, and cleanup have passed hardware
+testing.
 
 At the prompt, run `help` to verify UART receive interrupts and task context
 switching, not only console output.

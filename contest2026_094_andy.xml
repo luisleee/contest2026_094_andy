@@ -19,6 +19,7 @@
     <linkfile src="app/pm_test" dest="packages/demos/contest2026_094_pm_test"/>
     <linkfile src="app/wdt_test" dest="packages/demos/contest2026_094_wdt_test"/>
     <linkfile src="app/rtc_test" dest="packages/demos/contest2026_094_rtc_test"/>
+    <linkfile src="app/flash_test" dest="packages/demos/contest2026_094_flash_test"/>
     <linkfile src="board/d13x/demo88-nor" dest="vendor/artinchip/boards/d13x/demo88-nor"/>
     <linkfile src="chip/d13x" dest="vendor/artinchip/chips/artinchips/d13x"/>
   </project>

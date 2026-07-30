@@ -11,6 +11,16 @@
 
 struct aic_pinmux aic_pinmux_config[] =
 {
+#ifdef CONFIG_AIC_USING_QSPI0
+  /* Onboard 16 MiB SPI NOR: QSPI0 WP/MISO/CS/HOLD/CLK/MOSI. */
+
+  {2, PIN_PULL_UP, 3, "PB.0"},
+  {2, PIN_PULL_UP, 3, "PB.1"},
+  {2, PIN_PULL_UP, 3, "PB.2"},
+  {2, PIN_PULL_UP, 3, "PB.3"},
+  {2, PIN_PULL_UP, 3, "PB.4"},
+  {2, PIN_PULL_UP, 3, "PB.5"},
+#endif
 #ifdef CONFIG_ARCH_BUTTONS
   /* Onboard WAKEUP key: PD.15 is active low and conflicts with I2S_MCLK. */
 
