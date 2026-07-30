@@ -13,6 +13,11 @@ on-chip SRAM, and exposes an interactive NSH console on UART0 at 115200 baud.
 - `app/buzzer_test/`: bounded PWM1_A test for the onboard buzzer.
 - `app/fb_test/`: RGB565 color-bar test for the J18 LVDS framebuffer.
 - `app/lvgl_test/`: LVGL framebuffer, animation, and touch interaction test.
+- `app/button_test/`: bounded `/dev/buttons` test for the PD.15 WAKEUP key.
+- `app/dpad_test/`: bounded `/dev/dpad` test for the PA.2/GPAI2 direction keys.
+- `app/pm_test/`: display-standby and PD.15 wake/restore test.
+- `app/wdt_test/`: bounded keepalive and confirmed reset tests for the WDT.
+- `app/rtc_test/`: RTC counter, UTC set, and alarm interrupt tests.
 - `logs/`: exported AI coding logs and submission metadata.
 
 The manifest maps these directories into the openvela workspace without
@@ -38,7 +43,11 @@ Burn this image with AiBurn:
 
 ```text
 vendor/artinchip/pack/prebuilt/d13x_demo88-nor_v1.0.0.img
+SHA-256: de3c220c9fac39cfe5f728e739ca5fe8952979f12fadf251262b735ccd354cde
 ```
+
+The corresponding ELF sizes are `text=323048`, `data=1036`, and `bss=82080`.
+Its only load segment is `0x30044000..0x300a737f`.
 
 Use UART0 with `115200 8N1` and no flow control. A successful boot reaches:
 
@@ -71,6 +80,120 @@ sleep time uname uptime usleep
 
 Procfs exposes process, memory, and uptime data required by `ps`, `free`,
 `fdinfo`, and related inspection commands.
+
+## WAKEUP Button Test
+
+The board registers the active-low PD.15 WAKEUP key through the standard
+NuttX button upper-half at `/dev/buttons`. GPIOD raw IRQ 71 reports both press
+and release edges, and the common driver applies 30 ms debounce.
+
+```text
+nsh> ls /dev
+/dev/buttons
+nsh> button_test 15
+button_test: /dev/buttons supported=0x00000001 initial=released duration=15 seconds
+WAKEUP PRESS
+WAKEUP RELEASE
+button_test: presses=1 releases=1 final=released
+```
+
+PD.15 conflicts with I2S_MCLK. RESET remains a hardware reset input and UBOOT
+is not remuxed because it shares PA.0 with UART0 TX. WAKEUP has passed
+real-board press/release testing.
+
+## WAKEUP Standby Test
+
+The first power-management milestone reserves WAKEUP for a controlled standby
+test. It switches PD.15 from normal both-edge button reporting to a dedicated
+falling-edge wake handler, powers off the panel, display engine, and LVDS
+output, then restores them after WAKEUP or a bounded timeout.
+
+```text
+nsh> pm_test wake 30
+pm_test: phase-1 wake standby, timeout=30 seconds
+pm_test: display will turn off; press WAKEUP to resume
+pm_test: CPU/PLL clocks remain running in this milestone
+pm_test: WAKEUP resumed display after ... ms
+pm_test: PASS; falling-edge wake and display restore verified
+```
+
+Do not hold WAKEUP while starting the command. The arm path waits up to five
+seconds for release and refuses to take the IRQ while `/dev/buttons` owns it.
+After the test, run `button_test 15` to verify that normal both-edge press and
+release reporting was restored. This is display standby with wake validation,
+not CPU light sleep; the current build still reuses D12x clock/reset tables.
+
+## Direction-key Test
+
+UP, DOWN, LEFT, and RIGHT share the PA.2/GPAI2 resistor ladder and are exposed
+as a second standard NuttX button device. They are deliberately not merged
+with WAKEUP.
+
+```text
+nsh> ls /dev
+/dev/buttons
+/dev/dpad
+nsh> dpad_test 20
+dpad_test: /dev/dpad supported=0x0000000f initial=NONE raw=4095 duration=20 seconds
+UP PRESS raw=...
+UP RELEASE raw=...
+DOWN PRESS raw=...
+DOWN RELEASE raw=...
+LEFT PRESS raw=...
+LEFT RELEASE raw=...
+RIGHT PRESS raw=...
+RIGHT RELEASE raw=...
+dpad_test: up=1 down=1 left=1 right=1 final=NONE raw=...
+```
+
+The GPAI2 lower half samples every 10 ms, requires three equal classifications
+before changing state, and then uses the common 30 ms NuttX button debounce.
+PA.2 cannot be used as UART2 CTS while this device is enabled.
+
+## Watchdog Test
+
+The D13x WDT uses the 32 kHz clock, CMU register `0x20c`, reset bit 13, and
+raw IRQ 64. It is registered through the standard NuttX watchdog upper half.
+
+```text
+nsh> ls /dev
+/dev/watchdog0
+nsh> wdt_test feed 8
+wdt_test: feed mode, timeout=3 seconds, duration=8 seconds
+wdt_test: feed=1 active=yes timeleft=... ms
+...
+wdt_test: PASS; 8 keepalives completed and watchdog stopped
+```
+
+Run reset validation only after feed mode passes:
+
+```text
+nsh> wdt_test reset 5 confirm
+wdt_test: reset mode armed for 5 seconds
+wdt_test: no keepalive will be sent; board should reboot
+```
+
+The board must reboot into NSH after about five seconds. The explicit
+`confirm` argument prevents an accidental reset test.
+
+## RTC Test
+
+The D13x battery-backed RTC at `0x19030000` is the NuttX system realtime
+source. It uses the 32 kHz clock and raw IRQ 50 for its alarm.
+
+```text
+nsh> rtc_test show
+nsh> rtc_test count 5
+nsh> rtc_test set 2026-07-30T22:00:00
+nsh> rtc_test alarm 5
+```
+
+`set` accepts UTC in `YYYY-MM-DDTHH:MM:SS` form. After these tests pass,
+reboot and use `show` to check warm-reset retention. For battery backup
+validation, leave the coin cell installed, remove main power, wait, restore
+power, and confirm that the RTC continued to advance. The set path waits for
+`TCNT_INIT` completion; `show` and failed set operations print raw control,
+initialization, time-set, and counter values for diagnosis.
 
 ## I2C2 And GT911 Test
 
@@ -161,16 +284,22 @@ nsh> fb_test
 Framebuffer color bars: RGB565 1024x600, addr=0x40000000, stride=2048
 ```
 
-The interactive LVGL test opens both the framebuffer and touchscreen:
+The interactive LVGL test opens the framebuffer, touchscreen, and direction
+key device. It does not open `/dev/buttons`.
 
 ```text
 nsh> lvgl_test 60
-lvgl_test: LVGL 9.1.0, 1024x600 RGB565, /dev/input0, duration=60 seconds
+lvgl_test: LVGL 9.1.0, 1024x600 RGB565, /dev/input0, /dev/dpad, duration=60 seconds
 lvgl_test: touch events button=... slider=... switch=... drag=...
+lvgl_test: dpad up=... down=... left=... right=... focus=...; WAKEUP unused
 ```
 
 Click the button, move the slider, toggle the switch, and drag the yellow
-block. All four final counters should be nonzero.
+block. Press every direction key and verify that the yellow focus outline
+moves only among the six upper color swatches. UP/LEFT select the previous
+swatch; DOWN/RIGHT select the next. The middle button, slider, switch, and
+drag block remain touch-only. WAKEUP is reserved for system suspend/resume
+management.
 
 The display implementation and command are build- and pack-verified, and the
 PE.13 panel/backlight enable sequence has passed hardware testing. Color-bar
@@ -182,13 +311,15 @@ scanout still needs to be recorded. The framebuffer starts black; run
 The image includes LVGL 9.1.0 and its NuttX framebuffer backend. It maps the
 existing 1024x600 RGB565 `/dev/fb0` directly, so no second framebuffer is
 required. pthread is explicitly retained because the LVGL NuttX initialization
-layer uses it. The NuttX touchscreen backend opens `/dev/input0`.
+layer uses it. The NuttX touchscreen backend opens `/dev/input0`; a separate
+LVGL keypad backend opens only `/dev/dpad` for focus navigation.
 
 ```text
 nsh> free
 nsh> lvgl_test
-lvgl_test: LVGL 9.1.0, 1024x600 RGB565, /dev/input0, duration=30 seconds
+lvgl_test: LVGL 9.1.0, 1024x600 RGB565, /dev/input0, /dev/dpad, duration=30 seconds
 lvgl_test: touch events button=... slider=... switch=... drag=...
+lvgl_test: dpad up=... down=... left=... right=... focus=...; WAKEUP unused
 lvgl_test: completed; final frame remains on the panel
 nsh> free
 ```

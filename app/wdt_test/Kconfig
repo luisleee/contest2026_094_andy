@@ -1,0 +1,11 @@
+#
+# Contest 2026 team 094 watchdog test
+#
+
+config LVX_USE_DEMO_CONTEST2026_094_WDT_TEST
+	bool "Contest 2026 team 094 watchdog test"
+	default n
+	depends on D13X_WDT && WATCHDOG
+	---help---
+		Enable the bounded wdt_test command for /dev/watchdog0. Feed mode
+		stops safely; reset mode requires an explicit confirmation argument.

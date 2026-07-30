@@ -29,6 +29,14 @@ endif
 ifeq ($(CONFIG_D13X_GT911_INPUT),y)
 CSRCS += gt911_input.c
 endif
+
+ifeq ($(CONFIG_ARCH_BUTTONS),y)
+CSRCS += d13x_buttons.c
+endif
+
+ifeq ($(CONFIG_D13X_KEYADC),y)
+CSRCS += d13x_keyadc.c
+endif
 endif
 
 ifeq ($(CONFIG_ARTINCHIP_BINARY_ONLY),y)

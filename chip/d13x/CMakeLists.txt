@@ -41,6 +41,18 @@ if(CONFIG_D13X_PWM1)
   list(APPEND SRCS d13x_pwm.c)
 endif()
 
+if(CONFIG_D13X_WDT)
+  list(APPEND SRCS
+       ${AIC_HAL_DIR}/wdt/hal_wdt.c
+       ${AIC_DRV_DIR}/wdt/aic_drv_wdt.c)
+endif()
+
+if(CONFIG_D13X_RTC)
+  list(APPEND SRCS
+       d13x_rtc.c
+       ${AIC_HAL_DIR}/rtc/hal_rtc.c)
+endif()
+
 if(CONFIG_D13X_DISPLAY)
   list(APPEND SRCS d13x_fb.c d13x_de.c d13x_lvds.c d13x_panel.c)
 endif()
@@ -102,7 +114,10 @@ target_include_directories(
           ${AIC_HAL_DIR}/qspi
           ${AIC_HAL_DIR}/uart
           ${AIC_HAL_DIR}/gpio
+          ${AIC_HAL_DIR}/rtc
+          ${AIC_HAL_DIR}/wdt
           ${AIC_DRV_DIR}
+          ${AIC_DRV_DIR}/wdt
           ${AIC_DRV_DIR}/qspi
           ${AIC_DRV_DIR}/spi
           ${AIC_DRV_DIR}/mtd
@@ -118,4 +133,8 @@ if(CONFIG_ARCH_RV_ISA_ZICSR_ZIFENCEI)
   else()
     target_compile_options(arch PRIVATE -march=rv32imac_zicsr_zifencei)
   endif()
+endif()
+
+if(CONFIG_D13X_RTC)
+  target_compile_definitions(arch PRIVATE AIC_RTC_DRV_V11)
 endif()

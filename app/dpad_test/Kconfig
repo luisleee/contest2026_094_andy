@@ -1,0 +1,10 @@
+#
+# Contest 2026 team 094 direction-key test app
+#
+
+config LVX_USE_DEMO_CONTEST2026_094_DPAD_TEST
+	bool "Contest 2026 team 094 direction-key test"
+	default n
+	depends on D13X_KEYADC
+	---help---
+		Enable the bounded dpad_test NSH command for /dev/dpad.

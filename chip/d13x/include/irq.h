@@ -8,7 +8,10 @@
 #define D13X_IRQ_PERI_START   (RISCV_IRQ_ASYNC + 16)
 
 #define D13X_IRQ_DMA          (D13X_IRQ_PERI_START + 16)
+#define D13X_IRQ_RTC          (D13X_IRQ_PERI_START + 34) /* Raw IRQ 50 */
+#define D13X_IRQ_WDT          (D13X_IRQ_PERI_START + 48) /* Raw IRQ 64 */
 #define D13X_IRQ_GPIOA        (D13X_IRQ_PERI_START + 52) /* Raw IRQ 68 */
+#define D13X_IRQ_GPIOD        (D13X_IRQ_PERI_START + 55) /* Raw IRQ 71 */
 #define D13X_IRQ_UART0        (D13X_IRQ_PERI_START + 60)
 #define D13X_IRQ_UART1        (D13X_IRQ_PERI_START + 61)
 #define D13X_IRQ_UART2        (D13X_IRQ_PERI_START + 62)

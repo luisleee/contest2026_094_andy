@@ -1,0 +1,7 @@
+############################################################################
+# Contest 2026 team 094 button test app
+############################################################################
+
+ifneq ($(CONFIG_LVX_USE_DEMO_CONTEST2026_094_BUTTON_TEST),)
+CONFIGURED_APPS += $(APPDIR)/packages/demos/contest2026_094_button_test
+endif

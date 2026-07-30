@@ -12,6 +12,7 @@
 #include <syslog.h>
 
 #include <nuttx/i2c/i2c_master.h>
+#include <nuttx/input/buttons.h>
 #include <nuttx/video/fb.h>
 
 #include <arch/chip/d13x_i2c.h>
@@ -30,6 +31,50 @@ int d13x_board_bringup(void)
   int ret;
 
   aic_board_pinmux_init();
+
+#ifdef CONFIG_D13X_WDT
+  extern int aic_wdt_initialize(void);
+
+  ret = aic_wdt_initialize();
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "[D13X] failed to register /dev/watchdog0: %d\n",
+             ret);
+      result = ret;
+    }
+  else
+    {
+      syslog(LOG_INFO, "[D13X] watchdog registered as /dev/watchdog0\n");
+    }
+#endif
+
+#ifdef CONFIG_INPUT_BUTTONS_LOWER
+  ret = btn_lower_initialize("/dev/buttons");
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "[D13X] failed to register /dev/buttons: %d\n", ret);
+      result = ret;
+    }
+  else
+    {
+      syslog(LOG_INFO,
+             "[D13X] WAKEUP key registered as /dev/buttons (PD.15)\n");
+    }
+#endif
+
+#ifdef CONFIG_D13X_KEYADC
+  ret = d13x_keyadc_register("/dev/dpad");
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "[D13X] failed to register /dev/dpad: %d\n", ret);
+      result = ret;
+    }
+  else
+    {
+      syslog(LOG_INFO,
+             "[D13X] ADC direction keys registered as /dev/dpad (PA.2)\n");
+    }
+#endif
 
 #ifdef CONFIG_D13X_PWM1
   ret = d13x_pwm1_initialize("/dev/pwm1");

@@ -37,7 +37,12 @@ The burnable image is:
 
 ```text
 vendor/artinchip/pack/prebuilt/d13x_demo88-nor_v1.0.0.img
+SHA-256: de3c220c9fac39cfe5f728e739ca5fe8952979f12fadf251262b735ccd354cde
 ```
+
+The corresponding ELF sizes are `text=323048`, `data=1036`, and `bss=82080`.
+Its only load segment is `0x30044000..0x300a737f`, within the configured SRAM
+region.
 
 An `img2simg` error about `libselinux.so.1` only affects optional sparse image
 conversion. The raw `.img` above is still generated and is the AiBurn input.
@@ -70,6 +75,106 @@ nsh> fdinfo
 
 Tab completion is enabled. The shell also provides `cat`, `cd`, `hexdump`,
 `pidof`, `pwd`, `sleep`, `time`, and `usleep`.
+
+Verify the onboard WAKEUP key:
+
+```text
+nsh> ls /dev
+/dev/buttons must be present
+
+nsh> button_test 15
+button_test: /dev/buttons supported=0x00000001 initial=released duration=15 seconds
+WAKEUP PRESS
+WAKEUP RELEASE
+button_test: presses=1 releases=1 final=released
+```
+
+The active-low PD.15 input uses GPIOD raw IRQ 71, both edges, an internal
+pull-up, and 30 ms debounce in the standard NuttX button driver. PD.15 cannot
+be used as I2S_MCLK while this input is enabled. This path has passed
+real-board testing.
+
+Verify the first WAKEUP power-management milestone separately:
+
+```text
+nsh> pm_test wake 30
+pm_test: phase-1 wake standby, timeout=30 seconds
+pm_test: display will turn off; press WAKEUP to resume
+pm_test: CPU/PLL clocks remain running in this milestone
+pm_test: WAKEUP resumed display after ... ms
+pm_test: PASS; falling-edge wake and display restore verified
+nsh> button_test 15
+```
+
+The command waits for WAKEUP release, arms PD.15 for falling-edge wake, turns
+off PE.13, DE, and LVDS through `FBIOSET_POWER`, and restores the display and
+normal both-edge button behavior afterward. It refuses to arm while
+`/dev/buttons` owns the IRQ. This phase does not switch CPU or PLL clocks and
+must not be described as light sleep.
+
+Verify the separate PA.2/GPAI2 direction-key device:
+
+```text
+nsh> ls /dev
+/dev/dpad must be present
+
+nsh> dpad_test 20
+dpad_test: /dev/dpad supported=0x0000000f initial=NONE raw=4095 duration=20 seconds
+UP PRESS raw=...
+UP RELEASE raw=...
+DOWN PRESS raw=...
+DOWN RELEASE raw=...
+LEFT PRESS raw=...
+LEFT RELEASE raw=...
+RIGHT PRESS raw=...
+RIGHT RELEASE raw=...
+dpad_test: up=1 down=1 left=1 right=1 final=NONE raw=...
+```
+
+The second standard button lower half initializes ADCIM before GPAI2, applies
+D13x calibration, polls at 10 ms, and requires three identical direction
+classifications before reporting a transition. The common button upper half
+then applies 30 ms debounce. PA.2 cannot be used as UART2 CTS in this setup.
+
+Verify the watchdog first without resetting the board:
+
+```text
+nsh> ls /dev
+/dev/watchdog0 must be present
+nsh> wdt_test feed 8
+wdt_test: feed mode, timeout=3 seconds, duration=8 seconds
+wdt_test: feed=1 active=yes timeleft=... ms
+...
+wdt_test: PASS; 8 keepalives completed and watchdog stopped
+```
+
+Only after that passes, verify the reset path:
+
+```text
+nsh> wdt_test reset 5 confirm
+wdt_test: reset mode armed for 5 seconds
+wdt_test: no keepalive will be sent; board should reboot
+```
+
+The command intentionally sends no keepalive. The board must reboot into NSH
+after about five seconds; omission of the final `confirm` makes the command
+refuse the destructive test.
+
+Verify the battery-backed RTC and its alarm interrupt:
+
+```text
+nsh> rtc_test show
+nsh> rtc_test count 5
+nsh> rtc_test set 2026-07-30T22:00:00
+nsh> rtc_test alarm 5
+```
+
+The RTC is the NuttX system realtime source rather than a `/dev/rtc0` device.
+`count` must report a 4..6 second advance and `alarm` must report raw IRQ 50
+after approximately five seconds. Reboot and run `rtc_test show` for
+warm-reset retention. Then remove main power with the coin cell installed and
+verify the counter continues after power is restored. The set path waits for
+`TCNT_INIT` completion; `show` and failed set operations print raw RTC state.
 
 At the prompt, run `help` to verify UART receive interrupts and task context
 switching, not only console output.
@@ -165,16 +270,22 @@ Verify LVGL separately after the color bars are correct:
 ```text
 nsh> free
 nsh> lvgl_test
-lvgl_test: LVGL 9.1.0, 1024x600 RGB565, /dev/input0, duration=30 seconds
+lvgl_test: LVGL 9.1.0, 1024x600 RGB565, /dev/input0, /dev/dpad, duration=30 seconds
 lvgl_test: touch events button=... slider=... switch=... drag=...
+lvgl_test: dpad up=... down=... left=... right=... focus=...; WAKEUP unused
 lvgl_test: completed; final frame remains on the panel
 nsh> free
 ```
 
 Click the button, move the slider, toggle the switch, and drag the yellow
-block. The four event counters must all be nonzero.
+block. Press all four direction keys and require nonzero direction and focus
+counters. UP/LEFT move to the previous focusable control; DOWN/RIGHT move to
+the next. The focusable controls are only the six upper color swatches; the
+middle button, slider, switch, and drag block remain touch-only. `/dev/buttons`
+is not opened, because WAKEUP is reserved for system power management.
 
 The test renders color swatches, fixed geometry, an animated progress bar, a
 moving block, and a frame counter through LVGL's NuttX `/dev/fb0` backend. An
-optional duration from 5 to 300 seconds may be supplied. Touch is not part of
-this test; the GT911 LVGL input path is a later board milestone.
+optional duration from 5 to 300 seconds may be supplied. GT911 touch drives
+the interactive controls through `/dev/input0`; `/dev/dpad` supplies focus
+navigation without taking ownership of WAKEUP.

@@ -82,14 +82,14 @@ config D13X_TOUCH_GT911
       separate D13X_GT911_INPUT option to register the NuttX input device.
 
 config D13X_GT911_INPUT
-    bool "GT911 polled touchscreen input device"
+    bool "GT911 touchscreen input device"
     depends on D13X_TOUCH_GT911
     select INPUT
     select INPUT_TOUCHSCREEN
     help
       Register the onboard GT911 as /dev/input0 using the standard NuttX
-      touchscreen ABI. A kernel thread polls only while the device is open;
-      PA.11 GPIO interrupt delivery remains disabled.
+      touchscreen ABI. PA.11 falling-edge interrupts request worker-side I2C
+      reads while the device is open, with a 100 ms watchdog poll fallback.
 
 config D13X_PWM1
     bool "PWM1 controller for the demo88-nor buzzer"
@@ -97,6 +97,37 @@ config D13X_PWM1
     help
       Enable the D13x PWM1 lower-half. The demo88-nor board routes PWM1_A
       to the onboard buzzer through PE.11 and registers it as /dev/pwm1.
+
+config D13X_WDT
+    bool "Watchdog timer support"
+    select WATCHDOG
+    help
+      Enable the D13x watchdog at 0x19000000 using its 32 kHz clock and
+      register the standard NuttX device as /dev/watchdog0.
+
+config D13X_RTC
+    bool "Battery-backed real-time clock support"
+    select RTC
+    help
+      Enable the D13x RTC at 0x19030000 as the NuttX system real-time
+      source. The hardware provides a one-second counter and one alarm on
+      raw IRQ 50.
+
+config D13X_KEYADC
+    bool "GPAI2 four-direction key support"
+    depends on INPUT_BUTTONS
+    help
+      Enable the demo88-nor resistor-ladder direction keys on PA.2/GPAI2.
+      The four directions are exposed separately from WAKEUP through the
+      standard NuttX button ABI at /dev/dpad.
+
+config D13X_WAKEUP_PM
+    bool "PD.15 power-management wake support"
+    depends on ARCH_BUTTONS && ARCH_IRQBUTTONS
+    help
+      Reserve the demo88-nor WAKEUP key for power management. The first
+      milestone provides controlled falling-edge wake arming while retaining
+      normal both-edge /dev/buttons behavior outside the suspend window.
 
 config D13X_DISPLAY
     bool "1024x600 LVDS framebuffer support"

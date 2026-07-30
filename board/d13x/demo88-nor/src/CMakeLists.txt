@@ -9,3 +9,11 @@ endif()
 if(CONFIG_D13X_GT911_INPUT)
   target_sources(board PRIVATE gt911_input.c)
 endif()
+
+if(CONFIG_ARCH_BUTTONS)
+  target_sources(board PRIVATE d13x_buttons.c)
+endif()
+
+if(CONFIG_D13X_KEYADC)
+  target_sources(board PRIVATE d13x_keyadc.c)
+endif()
