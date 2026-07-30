@@ -1,0 +1,10 @@
+#
+# Contest 2026 team 094 button test app
+#
+
+config LVX_USE_DEMO_CONTEST2026_094_BUTTON_TEST
+	bool "Contest 2026 team 094 button test"
+	default n
+	depends on INPUT_BUTTONS
+	---help---
+		Enable the bounded button_test NSH command for /dev/buttons.

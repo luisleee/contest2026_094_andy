@@ -7,6 +7,8 @@ if ARCH_BOARD_CUSTOM
 config CONTEST2026_094_ANDY_BOARD_DEMO88_NOR
     bool "contest2026_094_andy demo88-nor"
     default y
+    select ARCH_HAVE_BUTTONS
+    select ARCH_HAVE_IRQBUTTONS
     help
       Enable the ArtInChip D133CBS demo88-nor board port for team 094.
 

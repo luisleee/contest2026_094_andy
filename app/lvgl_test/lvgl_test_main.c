@@ -10,12 +10,18 @@
 
 #include <nuttx/config.h>
 
+#include <sys/ioctl.h>
+
 #include <errno.h>
+#include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
+
+#include <nuttx/input/buttons.h>
 
 #include <lvgl/lvgl.h>
 
@@ -27,6 +33,13 @@
 #define LVGL_TEST_MIN_SECONDS       5u
 #define LVGL_TEST_MAX_SECONDS       300u
 #define LVGL_TEST_UPDATE_MS         50u
+#define LVGL_TEST_DPAD_DEVICE       "/dev/dpad"
+#define LVGL_TEST_DPAD_UP           (1u << 0)
+#define LVGL_TEST_DPAD_DOWN         (1u << 1)
+#define LVGL_TEST_DPAD_LEFT         (1u << 2)
+#define LVGL_TEST_DPAD_RIGHT        (1u << 3)
+#define LVGL_TEST_DPAD_SUPPORTED    0x0f
+#define LVGL_TEST_SWATCH_COUNT      6
 
 /****************************************************************************
  * Private Types
@@ -39,6 +52,8 @@ struct lvgl_test_ui_s
   lv_obj_t *moving_block;
   lv_obj_t *frame_label;
   lv_obj_t *event_label;
+  lv_obj_t *swatches[LVGL_TEST_SWATCH_COUNT];
+  lv_obj_t *button;
   lv_obj_t *button_label;
   lv_obj_t *slider;
   lv_obj_t *slider_label;
@@ -46,10 +61,20 @@ struct lvgl_test_ui_s
   lv_obj_t *switch_label;
   lv_obj_t *drag_zone;
   lv_obj_t *drag_block;
+  uint32_t dpad_presses[4];
+  uint32_t focus_events;
   uint32_t button_count;
   uint32_t slider_events;
   uint32_t switch_events;
   uint32_t drag_events;
+};
+
+struct lvgl_test_dpad_s
+{
+  FAR struct lvgl_test_ui_s *ui;
+  btn_buttonset_t previous;
+  uint32_t last_key;
+  int fd;
 };
 
 /****************************************************************************
@@ -99,6 +124,171 @@ static unsigned int lvgl_test_duration(int argc, char *argv[])
   return (unsigned int)value;
 }
 
+static void lvgl_test_input_status(FAR struct lvgl_test_ui_s *ui,
+                                   FAR const char *prefix)
+{
+  lv_label_set_text_fmt(ui->event_label,
+                        "%s | U%lu D%lu L%lu R%lu F%lu",
+                        prefix,
+                        (unsigned long)ui->dpad_presses[0],
+                        (unsigned long)ui->dpad_presses[1],
+                        (unsigned long)ui->dpad_presses[2],
+                        (unsigned long)ui->dpad_presses[3],
+                        (unsigned long)ui->focus_events);
+}
+
+static void lvgl_test_focus_event(lv_event_t *event)
+{
+  FAR struct lvgl_test_ui_s *ui = lv_event_get_user_data(event);
+  FAR lv_obj_t *target = lv_event_get_current_target(event);
+  char name[20];
+  unsigned int i;
+
+  for (i = 0; i < LVGL_TEST_SWATCH_COUNT; i++)
+    {
+      if (target == ui->swatches[i])
+        {
+          snprintf(name, sizeof(name), "Focus Color %u", i + 1);
+          ui->focus_events++;
+          lvgl_test_input_status(ui, name);
+          return;
+        }
+    }
+}
+
+static void lvgl_test_dpad_read(lv_indev_t *indev,
+                                lv_indev_data_t *data)
+{
+  FAR struct lvgl_test_dpad_s *dpad = lv_indev_get_user_data(indev);
+  btn_buttonset_t current;
+  btn_buttonset_t pressed;
+  FAR const char *name = NULL;
+  ssize_t nbytes;
+
+  nbytes = read(dpad->fd, &current, sizeof(current));
+  if (nbytes != sizeof(current))
+    {
+      data->state = LV_INDEV_STATE_RELEASED;
+      data->key = dpad->last_key;
+      return;
+    }
+
+  current &= LVGL_TEST_DPAD_SUPPORTED;
+  pressed = current & ~dpad->previous;
+  if ((pressed & LVGL_TEST_DPAD_UP) != 0)
+    {
+      dpad->ui->dpad_presses[0]++;
+      name = "UP";
+    }
+
+  if ((pressed & LVGL_TEST_DPAD_DOWN) != 0)
+    {
+      dpad->ui->dpad_presses[1]++;
+      name = "DOWN";
+    }
+
+  if ((pressed & LVGL_TEST_DPAD_LEFT) != 0)
+    {
+      dpad->ui->dpad_presses[2]++;
+      name = "LEFT";
+    }
+
+  if ((pressed & LVGL_TEST_DPAD_RIGHT) != 0)
+    {
+      dpad->ui->dpad_presses[3]++;
+      name = "RIGHT";
+    }
+
+  if (name != NULL)
+    {
+      lvgl_test_input_status(dpad->ui, name);
+    }
+
+  dpad->previous = current;
+  if ((current & LVGL_TEST_DPAD_UP) != 0)
+    {
+      dpad->last_key = LV_KEY_PREV;
+    }
+  else if ((current & LVGL_TEST_DPAD_DOWN) != 0)
+    {
+      dpad->last_key = LV_KEY_NEXT;
+    }
+  else if ((current & LVGL_TEST_DPAD_LEFT) != 0)
+    {
+      dpad->last_key = LV_KEY_PREV;
+    }
+  else if ((current & LVGL_TEST_DPAD_RIGHT) != 0)
+    {
+      dpad->last_key = LV_KEY_NEXT;
+    }
+
+  data->state = current != 0 ? LV_INDEV_STATE_PRESSED :
+                               LV_INDEV_STATE_RELEASED;
+  data->key = dpad->last_key;
+}
+
+static int lvgl_test_dpad_initialize(FAR struct lvgl_test_dpad_s *dpad,
+                                     FAR struct lvgl_test_ui_s *ui,
+                                     lv_display_t *display,
+                                     lv_group_t *group,
+                                     FAR lv_indev_t **indev)
+{
+  btn_buttonset_t supported;
+  ssize_t nbytes;
+  int ret;
+
+  memset(dpad, 0, sizeof(*dpad));
+  dpad->fd = -1;
+  dpad->ui = ui;
+
+  dpad->fd = open(LVGL_TEST_DPAD_DEVICE, O_RDONLY | O_NONBLOCK);
+  if (dpad->fd < 0)
+    {
+      return -errno;
+    }
+
+  ret = ioctl(dpad->fd, BTNIOC_SUPPORTED,
+              (unsigned long)((uintptr_t)&supported));
+  if (ret < 0)
+    {
+      ret = -errno;
+      goto errout;
+    }
+
+  if ((supported & LVGL_TEST_DPAD_SUPPORTED) !=
+      LVGL_TEST_DPAD_SUPPORTED)
+    {
+      ret = -ENODEV;
+      goto errout;
+    }
+
+  nbytes = read(dpad->fd, &dpad->previous, sizeof(dpad->previous));
+  if (nbytes != sizeof(dpad->previous))
+    {
+      ret = nbytes < 0 ? -errno : -EIO;
+      goto errout;
+    }
+
+  *indev = lv_indev_create();
+  if (*indev == NULL)
+    {
+      ret = -ENOMEM;
+      goto errout;
+    }
+
+  lv_indev_set_type(*indev, LV_INDEV_TYPE_KEYPAD);
+  lv_indev_set_read_cb(*indev, lvgl_test_dpad_read);
+  lv_indev_set_user_data(*indev, dpad);
+  lv_indev_set_display(*indev, display);
+  lv_indev_set_group(*indev, group);
+  return OK;
+
+errout:
+  close(dpad->fd);
+  dpad->fd = -1;
+  return ret;
+}
+
 static lv_obj_t *lvgl_test_panel(lv_obj_t *parent, int32_t x, int32_t y,
                                  int32_t width, int32_t height,
                                  uint32_t color)
@@ -115,6 +305,18 @@ static lv_obj_t *lvgl_test_panel(lv_obj_t *parent, int32_t x, int32_t y,
   lv_obj_set_style_pad_all(panel, 0, 0);
   lv_obj_remove_flag(panel, LV_OBJ_FLAG_SCROLLABLE);
   return panel;
+}
+
+static void lvgl_test_add_focusable(lv_group_t *group, lv_obj_t *object,
+                                    FAR struct lvgl_test_ui_s *ui)
+{
+  lv_obj_set_style_outline_width(object, 4, LV_STATE_FOCUSED);
+  lv_obj_set_style_outline_pad(object, 3, LV_STATE_FOCUSED);
+  lv_obj_set_style_outline_color(object, lv_color_hex(0xffc145),
+                                 LV_STATE_FOCUSED);
+  lv_obj_set_style_outline_opa(object, LV_OPA_COVER, LV_STATE_FOCUSED);
+  lv_obj_add_event_cb(object, lvgl_test_focus_event, LV_EVENT_FOCUSED, ui);
+  lv_group_add_obj(group, object);
 }
 
 static void lvgl_test_button_event(lv_event_t *event)
@@ -200,7 +402,8 @@ static void lvgl_test_drag_event(lv_event_t *event)
                         (long)point.x, (long)point.y);
 }
 
-static void lvgl_test_create_ui(struct lvgl_test_ui_s *ui)
+static void lvgl_test_create_ui(struct lvgl_test_ui_s *ui,
+                                lv_group_t *group)
 {
   lv_obj_t *screen;
   lv_obj_t *header;
@@ -209,7 +412,6 @@ static void lvgl_test_create_ui(struct lvgl_test_ui_s *ui)
   lv_obj_t *section;
   lv_obj_t *label;
   lv_obj_t *swatch;
-  lv_obj_t *button;
   unsigned int i;
 
   memset(ui, 0, sizeof(*ui));
@@ -221,18 +423,18 @@ static void lvgl_test_create_ui(struct lvgl_test_ui_s *ui)
 
   header = lvgl_test_panel(screen, 0, 0, 1024, 96, 0x182630);
   title = lv_label_create(header);
-  lv_label_set_text(title, "LVGL Touch Input");
+  lv_label_set_text(title, "LVGL Input Test");
   lv_obj_set_style_text_font(title, &lv_font_montserrat_24, 0);
   lv_obj_set_pos(title, 32, 18);
 
   subtitle = lv_label_create(header);
   lv_label_set_text(subtitle,
-                    "demo88-nor  |  /dev/fb0  |  /dev/input0");
+                    "demo88-nor  |  /dev/input0  |  /dev/dpad");
   lv_obj_set_style_text_color(subtitle, lv_color_hex(0xa9bbc7), 0);
   lv_obj_set_pos(subtitle, 34, 58);
 
   ui->event_label = lv_label_create(header);
-  lv_label_set_text(ui->event_label, "Touch ready");
+  lv_label_set_text(ui->event_label, "Touch + D-pad ready");
   lv_obj_set_style_text_color(ui->event_label, lv_color_hex(0x61d6a3), 0);
   lv_obj_align(ui->event_label, LV_ALIGN_RIGHT_MID, -32, 0);
 
@@ -245,9 +447,11 @@ static void lvgl_test_create_ui(struct lvgl_test_ui_s *ui)
     {
       swatch = lvgl_test_panel(section, 112 + (int32_t)i * 136, 20,
                                112, 52, g_swatch_colors[i]);
+      ui->swatches[i] = swatch;
       lv_obj_set_style_border_width(swatch, 2, 0);
       lv_obj_set_style_border_color(swatch, lv_color_hex(0xe4edf2), 0);
       lv_obj_set_style_border_opa(swatch, LV_OPA_COVER, 0);
+      lvgl_test_add_focusable(group, swatch, ui);
     }
 
   section = lvgl_test_panel(screen, 32, 228, 960, 254, 0x1c2d37);
@@ -255,18 +459,19 @@ static void lvgl_test_create_ui(struct lvgl_test_ui_s *ui)
   lv_label_set_text(label, "Controls");
   lv_obj_set_pos(label, 18, 14);
 
-  button = lv_button_create(section);
-  lv_obj_set_pos(button, 22, 50);
-  lv_obj_set_size(button, 174, 64);
-  lv_obj_set_style_radius(button, 4, 0);
-  lv_obj_set_style_bg_color(button, lv_color_hex(0x3978e8), 0);
-  lv_obj_set_style_bg_opa(button, LV_OPA_COVER, 0);
-  lv_obj_set_style_bg_color(button, lv_color_hex(0x2e5fb8),
+  ui->button = lv_button_create(section);
+  lv_obj_set_pos(ui->button, 22, 50);
+  lv_obj_set_size(ui->button, 174, 64);
+  lv_obj_set_style_radius(ui->button, 4, 0);
+  lv_obj_set_style_bg_color(ui->button, lv_color_hex(0x3978e8), 0);
+  lv_obj_set_style_bg_opa(ui->button, LV_OPA_COVER, 0);
+  lv_obj_set_style_bg_color(ui->button, lv_color_hex(0x2e5fb8),
                             LV_STATE_PRESSED);
-  ui->button_label = lv_label_create(button);
+  ui->button_label = lv_label_create(ui->button);
   lv_label_set_text(ui->button_label, "Button");
   lv_obj_center(ui->button_label);
-  lv_obj_add_event_cb(button, lvgl_test_button_event, LV_EVENT_CLICKED, ui);
+  lv_obj_add_event_cb(ui->button, lvgl_test_button_event,
+                      LV_EVENT_CLICKED, ui);
 
   ui->slider = lv_slider_create(section);
   lv_obj_set_pos(ui->slider, 232, 66);
@@ -369,9 +574,12 @@ static void lvgl_test_update(struct lvgl_test_ui_s *ui,
 
 int main(int argc, char *argv[])
 {
+  struct lvgl_test_dpad_s dpad;
   struct lvgl_test_ui_s ui;
   lv_nuttx_dsc_t info;
   lv_nuttx_result_t result;
+  lv_group_t *group;
+  lv_indev_t *dpad_indev = NULL;
   unsigned int duration;
   uint64_t start_ms;
   uint64_t now_ms;
@@ -379,6 +587,7 @@ int main(int argc, char *argv[])
   uint64_t last_update_ms;
   uint32_t frame = 0;
   uint32_t delay;
+  int ret;
 
   duration = lvgl_test_duration(argc, argv);
   if (duration == 0)
@@ -425,11 +634,33 @@ int main(int argc, char *argv[])
       return 1;
     }
 
-  printf("lvgl_test: LVGL %u.%u.%u, 1024x600 RGB565, /dev/input0, "
-         "duration=%u seconds\n", LVGL_VERSION_MAJOR, LVGL_VERSION_MINOR,
-         LVGL_VERSION_PATCH, duration);
+  group = lv_group_create();
+  if (group == NULL)
+    {
+      printf("lvgl_test: failed to create input group\n");
+      lv_nuttx_deinit(&result);
+      lv_deinit();
+      return 1;
+    }
 
-  lvgl_test_create_ui(&ui);
+  lvgl_test_create_ui(&ui, group);
+  ret = lvgl_test_dpad_initialize(&dpad, &ui, result.disp, group,
+                                  &dpad_indev);
+  if (ret < 0)
+    {
+      printf("lvgl_test: failed to initialize %s: %s\n",
+             LVGL_TEST_DPAD_DEVICE, strerror(-ret));
+      lv_group_delete(group);
+      lv_nuttx_deinit(&result);
+      lv_deinit();
+      return 1;
+    }
+
+  printf("lvgl_test: LVGL %u.%u.%u, 1024x600 RGB565, /dev/input0, "
+         "/dev/dpad, duration=%u seconds\n",
+         LVGL_VERSION_MAJOR, LVGL_VERSION_MINOR, LVGL_VERSION_PATCH,
+         duration);
+
   lv_obj_invalidate(lv_screen_active());
   lv_refr_now(result.disp);
 
@@ -457,15 +688,23 @@ int main(int argc, char *argv[])
 
   lv_label_set_text(ui.frame_label, "PASS - animation complete");
   lv_label_set_text_fmt(ui.event_label,
-                        "Events B=%lu S=%lu W=%lu D=%lu",
+                        "B%lu S%lu W%lu D%lu | U%lu D%lu L%lu R%lu F%lu",
                         (unsigned long)ui.button_count,
                         (unsigned long)ui.slider_events,
                         (unsigned long)ui.switch_events,
-                        (unsigned long)ui.drag_events);
+                        (unsigned long)ui.drag_events,
+                        (unsigned long)ui.dpad_presses[0],
+                        (unsigned long)ui.dpad_presses[1],
+                        (unsigned long)ui.dpad_presses[2],
+                        (unsigned long)ui.dpad_presses[3],
+                        (unsigned long)ui.focus_events);
   lv_obj_set_style_bg_color(ui.moving_block, lv_color_hex(0x3ac47d), 0);
   lv_obj_invalidate(lv_screen_active());
   lv_refr_now(result.disp);
 
+  lv_indev_delete(dpad_indev);
+  lv_group_delete(group);
+  close(dpad.fd);
   lv_nuttx_deinit(&result);
   lv_deinit();
   printf("lvgl_test: touch events button=%lu slider=%lu switch=%lu "
@@ -473,6 +712,13 @@ int main(int argc, char *argv[])
          (unsigned long)ui.slider_events,
          (unsigned long)ui.switch_events,
          (unsigned long)ui.drag_events);
+  printf("lvgl_test: dpad up=%lu down=%lu left=%lu right=%lu "
+         "focus=%lu; WAKEUP unused\n",
+         (unsigned long)ui.dpad_presses[0],
+         (unsigned long)ui.dpad_presses[1],
+         (unsigned long)ui.dpad_presses[2],
+         (unsigned long)ui.dpad_presses[3],
+         (unsigned long)ui.focus_events);
   printf("lvgl_test: completed; final frame remains on the panel\n");
   return 0;
 }

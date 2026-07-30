@@ -14,6 +14,11 @@
     <linkfile src="app/buzzer_test" dest="packages/demos/contest2026_094_buzzer_test"/>
     <linkfile src="app/fb_test" dest="packages/demos/contest2026_094_fb_test"/>
     <linkfile src="app/lvgl_test" dest="packages/demos/contest2026_094_lvgl_test"/>
+    <linkfile src="app/button_test" dest="packages/demos/contest2026_094_button_test"/>
+    <linkfile src="app/dpad_test" dest="packages/demos/contest2026_094_dpad_test"/>
+    <linkfile src="app/pm_test" dest="packages/demos/contest2026_094_pm_test"/>
+    <linkfile src="app/wdt_test" dest="packages/demos/contest2026_094_wdt_test"/>
+    <linkfile src="app/rtc_test" dest="packages/demos/contest2026_094_rtc_test"/>
     <linkfile src="board/d13x/demo88-nor" dest="vendor/artinchip/boards/d13x/demo88-nor"/>
     <linkfile src="chip/d13x" dest="vendor/artinchip/chips/artinchips/d13x"/>
   </project>

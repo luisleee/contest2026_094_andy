@@ -1,0 +1,11 @@
+#
+# Contest 2026 team 094 RTC test
+#
+
+config LVX_USE_DEMO_CONTEST2026_094_RTC_TEST
+	bool "Contest 2026 team 094 RTC test"
+	default n
+	depends on D13X_RTC && RTC
+	---help---
+		Enable the rtc_test command for counter, time-setting, alarm IRQ,
+		and battery-backed retention validation.

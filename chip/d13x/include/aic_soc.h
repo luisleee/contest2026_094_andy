@@ -123,7 +123,10 @@ extern "C"
 #define D13X_IRQN_PERI_BASE    16U
 #define D13X_IRQN_CPU_TIMER    7U
 #define D13X_IRQN_DMA          32U
+#define D13X_IRQN_RTC          50U
+#define D13X_IRQN_WDT          64U
 #define D13X_IRQN_GPIOA        68U
+#define D13X_IRQN_GPIOD        71U
 #define D13X_IRQN_UART0        76U
 #define D13X_IRQN_UART1        77U
 #define D13X_IRQN_UART2        78U
@@ -149,8 +152,11 @@ typedef enum IRQn
   Supervisor_External_IRQn = 9U,
   Machine_External_IRQn    = 11U,
 
+  RTC_IRQn                 = D13X_IRQN_RTC,
+  WDT_IRQn                 = D13X_IRQN_WDT,
   DMA_IRQn                 = RISCV_IRQ_ASYNC + D13X_IRQN_DMA,
   GPIOA_IRQn               = RISCV_IRQ_ASYNC + D13X_IRQN_GPIOA,
+  GPIOD_IRQn               = RISCV_IRQ_ASYNC + D13X_IRQN_GPIOD,
   UART0_IRQn               = RISCV_IRQ_ASYNC + D13X_IRQN_UART0,
   UART1_IRQn               = RISCV_IRQ_ASYNC + D13X_IRQN_UART1,
   UART2_IRQn               = RISCV_IRQ_ASYNC + D13X_IRQN_UART2,

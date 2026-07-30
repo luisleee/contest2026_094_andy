@@ -11,6 +11,16 @@
 
 struct aic_pinmux aic_pinmux_config[] =
 {
+#ifdef CONFIG_ARCH_BUTTONS
+  /* Onboard WAKEUP key: PD.15 is active low and conflicts with I2S_MCLK. */
+
+  {1, PIN_PULL_UP, 3, "PD.15"},
+#endif
+#ifdef CONFIG_D13X_KEYADC
+  /* Four direction keys share GPAI2 through the PA.2 resistor ladder. */
+
+  {2, PIN_PULL_DIS, 3, "PA.2"},
+#endif
 #ifdef CONFIG_D13X_I2C2
   /* Onboard GT911 touch bus. PA.10/PA.11 are configured explicitly by the
    * board touch initialization when CONFIG_D13X_TOUCH_GT911 is enabled.
