@@ -4,6 +4,7 @@
 
 #include <nuttx/config.h>
 
+#include <errno.h>
 #include <stdint.h>
 
 #include <nuttx/arch.h>
@@ -14,10 +15,7 @@
 #include "riscv_internal.h"
 
 #include "chip.h"
-
-#ifdef CONFIG_USING_SFUD
-#  include <sfud.h>
-#endif
+#include "d13x_spinor.h"
 
 extern void aic_board_pinmux_init(void);
 extern void aic_board_sysclk_init(void);
@@ -41,13 +39,24 @@ void d13x_chip_late_boot(void)
   int ret = 0;
 
 #if defined(CONFIG_USING_SFUD) && defined(CONFIG_AIC_SPINOR_DRV)
-  extern sfud_flash *spinor_init(unsigned int spi_bus);
-  sfud_flash *sfud = spinor_init(0);
-
-  if (sfud == NULL)
+  if (d13x_spinor_initialize() < 0)
     {
       syslog(LOG_ERR, "Failed to probe spinor flash.\n");
     }
+#ifdef CONFIG_FS_LITTLEFS
+  else
+    {
+      ret = mount("/dev/data", "/data", "littlefs", 0, NULL);
+      if (ret < 0)
+        {
+          syslog(LOG_ERR, "Failed to mount /dev/data: %d\n", errno);
+        }
+      else
+        {
+          syslog(LOG_INFO, "Mounted /dev/data at /data.\n");
+        }
+    }
+#endif
 #endif
 
 #ifdef CONFIG_FS_PROCFS

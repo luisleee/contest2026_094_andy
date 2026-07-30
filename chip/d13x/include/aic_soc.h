@@ -123,6 +123,10 @@ extern "C"
 #define D13X_IRQN_PERI_BASE    16U
 #define D13X_IRQN_CPU_TIMER    7U
 #define D13X_IRQN_DMA          32U
+#define D13X_IRQN_QSPI2        42U
+#define D13X_IRQN_QSPI3        43U
+#define D13X_IRQN_QSPI0        44U
+#define D13X_IRQN_QSPI1        45U
 #define D13X_IRQN_RTC          50U
 #define D13X_IRQN_WDT          64U
 #define D13X_IRQN_GPIOA        68U
@@ -152,6 +156,10 @@ typedef enum IRQn
   Supervisor_External_IRQn = 9U,
   Machine_External_IRQn    = 11U,
 
+  QSPI0_IRQn               = D13X_IRQN_QSPI0,
+  QSPI1_IRQn               = D13X_IRQN_QSPI1,
+  QSPI2_IRQn               = D13X_IRQN_QSPI2,
+  QSPI3_IRQn               = D13X_IRQN_QSPI3,
   RTC_IRQn                 = D13X_IRQN_RTC,
   WDT_IRQn                 = D13X_IRQN_WDT,
   DMA_IRQn                 = RISCV_IRQ_ASYNC + D13X_IRQN_DMA,

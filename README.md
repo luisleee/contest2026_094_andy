@@ -18,6 +18,7 @@ on-chip SRAM, and exposes an interactive NSH console on UART0 at 115200 baud.
 - `app/pm_test/`: display-standby and PD.15 wake/restore test.
 - `app/wdt_test/`: bounded keepalive and confirmed reset tests for the WDT.
 - `app/rtc_test/`: RTC counter, UTC set, and alarm interrupt tests.
+- `app/flash_test/`: SPI NOR checks and bounded `/data` persistence tests.
 - `logs/`: exported AI coding logs and submission metadata.
 
 The manifest maps these directories into the openvela workspace without
@@ -43,11 +44,12 @@ Burn this image with AiBurn:
 
 ```text
 vendor/artinchip/pack/prebuilt/d13x_demo88-nor_v1.0.0.img
-SHA-256: de3c220c9fac39cfe5f728e739ca5fe8952979f12fadf251262b735ccd354cde
+SHA-256: e82ae9a414dc454dfb1601b0bf2dccbef93925d188bcd4c8185e261034e801f0
 ```
 
-The corresponding ELF sizes are `text=323048`, `data=1036`, and `bss=82080`.
-Its only load segment is `0x30044000..0x300a737f`.
+The corresponding ELF sizes are `text=366368`, `data=1428`, and `bss=82400`.
+Its load segment uses `0x30044000..0x3009dd93` for file-backed data and ends at
+`0x300b1f7f` after BSS/stack allocation.
 
 Use UART0 with `115200 8N1` and no flow control. A successful boot reaches:
 
@@ -193,7 +195,39 @@ reboot and use `show` to check warm-reset retention. For battery backup
 validation, leave the coin cell installed, remove main power, wait, restore
 power, and confirm that the RTC continued to advance. The set path waits for
 `TCNT_INIT` completion; `show` and failed set operations print raw control,
-initialization, time-set, and counter values for diagnosis.
+initialization, time-set, and counter values for diagnosis. Counter, set,
+alarm, warm-reset retention, and coin-cell retention have passed hardware
+testing.
+
+## SPI NOR And LittleFS Test
+
+QSPI0 uses PB.0..PB.5 and registers `/dev/nor0` plus the partitions parsed
+from the image header. Late boot mounts the existing 1 MiB `/dev/data`
+LittleFS partition at `/data`; NuttX creates the mount-point inode as part of
+`mount()`.
+
+```text
+nsh> flash_test info
+nsh> flash_test read 0 64
+nsh> flash_test verify 0 65536
+nsh> mount
+nsh> ls /data
+nsh> flash_test fs write
+nsh> flash_test fs check
+nsh> reboot
+nsh> flash_test fs check
+nsh> flash_test fs clear
+```
+
+`info` reports JEDEC/SFDP data, geometry, and partition boundaries. `read`
+prints a bounded hexadecimal dump, while `verify` reads the same range twice
+and requires matching CRC32 values. `/dev/nor0` is an MTD inode rather than a
+character device, so the test resolves it through the MTD registry instead of
+calling `open()`; BCH is not required. Information, partition enumeration,
+bounded read, and repeated-read CRC32 have passed hardware testing. The `fs`
+commands only create, verify, or remove `/data/spi_test.bin`; they never issue
+raw writes to the boot, environment, OS, or rodata partitions. Mounting,
+write/readback, reboot retention, and cleanup have passed hardware testing.
 
 ## I2C2 And GT911 Test
 

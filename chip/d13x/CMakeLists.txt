@@ -68,11 +68,6 @@ if(CONFIG_DRIVER_QSPI_HAL_EN)
   endif()
 endif()
 
-if(CONFIG_AIC_QSPI_DRV)
-  list(APPEND SRCS
-       ${AIC_DRV_DIR}/qspi/drv_qspi.c)
-endif()
-
 if(CONFIG_USING_MTD)
   list(APPEND SRCS
        ${AIC_DRV_DIR}/mtd/mtdcore.c
@@ -81,6 +76,7 @@ endif()
 
 if(CONFIG_AIC_SPINOR_DRV)
   list(APPEND SRCS
+       d13x_spinor.c
        ${AIC_DRV_DIR}/spinor/spinor_flash.c
        ${AIC_DRV_DIR}/spinor/partition.c
        ${AIC_DRV_DIR}/spinor/aic_flash_xip_def.c)

@@ -139,4 +139,20 @@ config D13X_DISPLAY
       demo88-nor J18 panel. A single RGB565 framebuffer is reserved at the
       start of the bootloader-initialized PSRAM and registered as /dev/fb0.
 
+menu "ArtInChip Shared Peripheral Drivers"
+
+config AIC_QSPI_DRV
+    bool "ArtInChip QSPI controller driver"
+    select SPI_DRIVER
+    select SPI
+    select SPI_EXCHANGE
+    help
+      Build the shared ArtInChip QSPI controller layer used by SFUD. The
+      vendor NuttX Kconfig does not otherwise expose this top-level symbol.
+
+source "../vendor/artinchip/chips/artinchips/hal/Kconfig"
+source "../vendor/artinchip/chips/artinchips/drv/Kconfig"
+
+endmenu
+
 endif
