@@ -55,6 +55,14 @@ struct aic_pinmux aic_pinmux_config[] =
 
   {3, PIN_PULL_DIS, 3, "PE.11"},
 #endif
+#ifdef CONFIG_AIC_USING_AUDIO
+  /* Onboard speaker: DSPK1 on PE.12 and active-low amplifier shutdown on
+   * PD.10. The amplifier remains disabled until playback starts.
+   */
+
+  {5, PIN_PULL_DIS, 3, "PE.12"},
+  {1, PIN_PULL_DIS, 3, CONFIG_AIC_AUDIO_PA_ENABLE_GPIO},
+#endif
 #ifdef CONFIG_D13X_DISPLAY
   /* J18 single-link LVDS. J3 MIPI uses the same pins with function 4. */
 
