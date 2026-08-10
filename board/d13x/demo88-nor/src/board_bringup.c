@@ -17,6 +17,7 @@
 
 #include <arch/chip/d13x_i2c.h>
 #include <arch/chip/d13x_pwm.h>
+#include <arch/chip/d13x_sdmc.h>
 
 #include <aic_utils.h>
 #include "board.h"
@@ -31,6 +32,20 @@ int d13x_board_bringup(void)
   int ret;
 
   aic_board_pinmux_init();
+
+#ifdef CONFIG_D13X_SDMC1
+  ret = d13x_sdmc1_initialize();
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "[D13X] failed to register /dev/mmcsd1: %d\n", ret);
+      result = ret;
+    }
+  else
+    {
+      syslog(LOG_INFO,
+             "[D13X] SDMC1 TF card registered as /dev/mmcsd1\n");
+    }
+#endif
 
 #ifdef CONFIG_D13X_WDT
   extern int aic_wdt_initialize(void);

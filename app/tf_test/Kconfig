@@ -1,0 +1,11 @@
+#
+# Contest 2026 team 094 TF-card test app
+#
+
+config LVX_USE_DEMO_CONTEST2026_094_TF_TEST
+	bool "Contest 2026 team 094 TF-card test"
+	default n
+	depends on MMCSD && FS_FATFS
+	---help---
+		Enable the tf_test NSH command for /dev/mmcsd1 and /sdcard.
+		The test never formats the card and only modifies tf_test.bin.
