@@ -11,6 +11,8 @@
 #include <errno.h>
 #include <syslog.h>
 
+#include <nuttx/audio/audio.h>
+#include <nuttx/audio/pcm.h>
 #include <nuttx/i2c/i2c_master.h>
 #include <nuttx/input/buttons.h>
 #include <nuttx/video/fb.h>
@@ -32,6 +34,46 @@ int d13x_board_bringup(void)
   int ret;
 
   aic_board_pinmux_init();
+
+#ifdef CONFIG_AIC_USING_AUDIO
+  FAR struct audio_lowerhalf_s *audio;
+  FAR struct audio_lowerhalf_s *pcm;
+
+  extern FAR struct audio_lowerhalf_s *aic_audio_initialize(void);
+
+  audio = aic_audio_initialize();
+  if (audio == NULL)
+    {
+      syslog(LOG_ERR, "[D13X] failed to initialize speaker audio\n");
+      result = -ENODEV;
+    }
+  else
+    {
+      pcm = pcm_decode_initialize(audio);
+      if (pcm == NULL)
+        {
+          syslog(LOG_ERR, "[D13X] failed to initialize PCM decoder\n");
+          result = -ENODEV;
+        }
+      else
+        {
+          ret = audio_register("pcm0p", pcm);
+          if (ret < 0)
+            {
+              syslog(LOG_ERR,
+                     "[D13X] failed to register /dev/audio/pcm0p: %d\n",
+                     ret);
+              result = ret;
+            }
+          else
+            {
+              syslog(LOG_INFO,
+                     "[D13X] DSPK1 speaker registered as "
+                     "/dev/audio/pcm0p\n");
+            }
+        }
+    }
+#endif
 
 #ifdef CONFIG_D13X_SDMC1
   ret = d13x_sdmc1_initialize();

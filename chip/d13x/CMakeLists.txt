@@ -61,6 +61,12 @@ if(CONFIG_D13X_SDMC1)
        ${AIC_DRV_DIR}/sdmc/aic_sdio.c)
 endif()
 
+if(CONFIG_AIC_USING_AUDIO)
+  list(APPEND SRCS
+       ${AIC_HAL_DIR}/audio/hal_audio.c
+       ${AIC_DRV_DIR}/audio/aic_drv_audio.c)
+endif()
+
 if(CONFIG_D13X_DISPLAY)
   list(APPEND SRCS d13x_fb.c d13x_de.c d13x_lvds.c d13x_panel.c)
 endif()
@@ -118,10 +124,14 @@ target_include_directories(
           ${AIC_HAL_DIR}/qspi
           ${AIC_HAL_DIR}/uart
           ${AIC_HAL_DIR}/gpio
+          ${AIC_HAL_DIR}/audio
+          ${AIC_HAL_DIR}/dma
           ${AIC_HAL_DIR}/rtc
           ${AIC_HAL_DIR}/sdmc
           ${AIC_HAL_DIR}/wdt
           ${AIC_DRV_DIR}
+          ${AIC_DRV_DIR}/audio
+          ${AIC_DRV_DIR}/dma
           ${AIC_DRV_DIR}/wdt
           ${AIC_DRV_DIR}/qspi
           ${AIC_DRV_DIR}/spi

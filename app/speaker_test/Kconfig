@@ -1,0 +1,11 @@
+#
+# Contest 2026 team 094 speaker test app
+#
+
+config LVX_USE_DEMO_CONTEST2026_094_SPEAKER_TEST
+	bool "Contest 2026 team 094 speaker test"
+	default n
+	depends on AUDIO && SYSTEM_NXPLAYER
+	---help---
+		Enable the speaker_test NSH command for the demo88-nor DSPK1
+		output and /dev/audio/pcm0p.
