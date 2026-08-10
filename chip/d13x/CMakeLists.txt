@@ -53,6 +53,14 @@ if(CONFIG_D13X_RTC)
        ${AIC_HAL_DIR}/rtc/hal_rtc.c)
 endif()
 
+if(CONFIG_D13X_SDMC1)
+  list(APPEND SRCS
+       d13x_sdmc.c
+       ${AIC_HAL_DIR}/sdmc/bouncebuf.c
+       ${AIC_HAL_DIR}/sdmc/hal_sdmc.c
+       ${AIC_DRV_DIR}/sdmc/aic_sdio.c)
+endif()
+
 if(CONFIG_D13X_DISPLAY)
   list(APPEND SRCS d13x_fb.c d13x_de.c d13x_lvds.c d13x_panel.c)
 endif()
@@ -111,6 +119,7 @@ target_include_directories(
           ${AIC_HAL_DIR}/uart
           ${AIC_HAL_DIR}/gpio
           ${AIC_HAL_DIR}/rtc
+          ${AIC_HAL_DIR}/sdmc
           ${AIC_HAL_DIR}/wdt
           ${AIC_DRV_DIR}
           ${AIC_DRV_DIR}/wdt
@@ -119,6 +128,7 @@ target_include_directories(
           ${AIC_DRV_DIR}/mtd
           ${AIC_DRV_DIR}/spinor
           ${AIC_DRV_DIR}/sfud
+          ${AIC_DRV_DIR}/sdmc
           ${AIC_D12X_DIR})
 
 # Work around missing zicsr/zifencei propagation in the current cmake flow.

@@ -127,6 +127,7 @@ extern "C"
 #define D13X_IRQN_QSPI3        43U
 #define D13X_IRQN_QSPI0        44U
 #define D13X_IRQN_QSPI1        45U
+#define D13X_IRQN_SDMC1        47U
 #define D13X_IRQN_RTC          50U
 #define D13X_IRQN_WDT          64U
 #define D13X_IRQN_GPIOA        68U
@@ -160,6 +161,7 @@ typedef enum IRQn
   QSPI1_IRQn               = D13X_IRQN_QSPI1,
   QSPI2_IRQn               = D13X_IRQN_QSPI2,
   QSPI3_IRQn               = D13X_IRQN_QSPI3,
+  SDMC1_IRQn               = D13X_IRQN_SDMC1,
   RTC_IRQn                 = D13X_IRQN_RTC,
   WDT_IRQn                 = D13X_IRQN_WDT,
   DMA_IRQn                 = RISCV_IRQ_ASYNC + D13X_IRQN_DMA,

@@ -31,6 +31,17 @@ struct aic_pinmux aic_pinmux_config[] =
 
   {2, PIN_PULL_DIS, 3, "PA.2"},
 #endif
+#ifdef CONFIG_D13X_SDMC1
+  /* J5 TF card: SDMC1 D0..D3/CMD/CLK and card detect. */
+
+  {2, PIN_PULL_UP, 3, "PC.0"},
+  {2, PIN_PULL_UP, 3, "PC.1"},
+  {2, PIN_PULL_UP, 3, "PC.2"},
+  {2, PIN_PULL_UP, 3, "PC.3"},
+  {2, PIN_PULL_UP, 3, "PC.4"},
+  {2, PIN_PULL_UP, 3, "PC.5"},
+  {2, PIN_PULL_UP, 3, "PC.6"},
+#endif
 #ifdef CONFIG_D13X_I2C2
   /* Onboard GT911 touch bus. PA.10/PA.11 are configured explicitly by the
    * board touch initialization when CONFIG_D13X_TOUCH_GT911 is enabled.
