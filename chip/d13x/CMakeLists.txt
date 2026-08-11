@@ -61,6 +61,10 @@ if(CONFIG_D13X_SDMC1)
        ${AIC_DRV_DIR}/sdmc/aic_sdio.c)
 endif()
 
+if(CONFIG_D13X_GMAC)
+  list(APPEND SRCS d13x_gmac.c)
+endif()
+
 if(CONFIG_AIC_USING_AUDIO)
   list(APPEND SRCS
        ${AIC_HAL_DIR}/audio/hal_audio.c

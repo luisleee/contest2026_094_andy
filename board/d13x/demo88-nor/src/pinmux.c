@@ -42,6 +42,21 @@ struct aic_pinmux aic_pinmux_config[] =
   {2, PIN_PULL_UP, 3, "PC.5"},
   {2, PIN_PULL_UP, 3, "PC.6"},
 #endif
+#ifdef CONFIG_D13X_GMAC
+  /* HR911105A RJ45 through RTL8201F: GMAC0 RMII plus CLK_OUT2 to the PHY. */
+
+  {2, PIN_PULL_DIS, 3, "PE.0"},
+  {2, PIN_PULL_DIS, 3, "PE.1"},
+  {2, PIN_PULL_DIS, 3, "PE.2"},
+  {2, PIN_PULL_DIS, 3, "PE.3"},
+  {2, PIN_PULL_DIS, 3, "PE.4"},
+  {2, PIN_PULL_DIS, 3, "PE.5"},
+  {1, PIN_PULL_DIS, 3, "PE.6"},
+  {2, PIN_PULL_DIS, 3, "PE.7"},
+  {2, PIN_PULL_DIS, 3, "PE.8"},
+  {2, PIN_PULL_DIS, 3, "PE.9"},
+  {2, PIN_PULL_DIS, 3, "PE.10"},
+#endif
 #ifdef CONFIG_D13X_I2C2
   /* Onboard GT911 touch bus. PA.10/PA.11 are configured explicitly by the
    * board touch initialization when CONFIG_D13X_TOUCH_GT911 is enabled.
