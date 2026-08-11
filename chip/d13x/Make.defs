@@ -29,6 +29,9 @@ endif
 ifeq ($(CONFIG_D13X_PWM1),y)
 CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_pwm.c
 endif
+ifeq ($(CONFIG_D13X_GMAC),y)
+CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_gmac.c
+endif
 ifeq ($(CONFIG_D13X_DISPLAY),y)
 CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_fb.c
 CHIP_CSRCS += $(SRC_D13X_PATH)/d13x_de.c
