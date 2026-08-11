@@ -164,7 +164,7 @@ typedef enum IRQn
   SDMC1_IRQn               = D13X_IRQN_SDMC1,
   RTC_IRQn                 = D13X_IRQN_RTC,
   WDT_IRQn                 = D13X_IRQN_WDT,
-  DMA_IRQn                 = RISCV_IRQ_ASYNC + D13X_IRQN_DMA,
+  DMA_IRQn                 = D13X_IRQN_DMA,
   GPIOA_IRQn               = RISCV_IRQ_ASYNC + D13X_IRQN_GPIOA,
   GPIOD_IRQn               = RISCV_IRQ_ASYNC + D13X_IRQN_GPIOD,
   UART0_IRQn               = RISCV_IRQ_ASYNC + D13X_IRQN_UART0,

@@ -38,8 +38,14 @@ int d13x_board_bringup(void)
 #ifdef CONFIG_AIC_USING_AUDIO
   FAR struct audio_lowerhalf_s *audio;
   FAR struct audio_lowerhalf_s *pcm;
+#ifdef CONFIG_AIC_AUDIO_DMIC
+  FAR struct audio_lowerhalf_s *dmic;
+#endif
 
   extern FAR struct audio_lowerhalf_s *aic_audio_initialize(void);
+#ifdef CONFIG_AIC_AUDIO_DMIC
+  extern FAR struct audio_lowerhalf_s *aic_dmic_initialize(void);
+#endif
 
   audio = aic_audio_initialize();
   if (audio == NULL)
@@ -73,6 +79,31 @@ int d13x_board_bringup(void)
             }
         }
     }
+
+#ifdef CONFIG_AIC_AUDIO_DMIC
+  dmic = aic_dmic_initialize();
+  if (dmic == NULL)
+    {
+      syslog(LOG_ERR, "[D13X] failed to initialize DMIC capture\n");
+      result = -ENODEV;
+    }
+  else
+    {
+      ret = audio_register("pcm0c", dmic);
+      if (ret < 0)
+        {
+          syslog(LOG_ERR,
+                 "[D13X] failed to register /dev/audio/pcm0c: %d\n",
+                 ret);
+          result = ret;
+        }
+      else
+        {
+          syslog(LOG_INFO,
+                 "[D13X] DMIC capture registered as /dev/audio/pcm0c\n");
+        }
+    }
+#endif
 #endif
 
 #ifdef CONFIG_D13X_SDMC1

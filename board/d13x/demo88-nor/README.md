@@ -37,12 +37,12 @@ The burnable image is:
 
 ```text
 vendor/artinchip/pack/prebuilt/d13x_demo88-nor_v1.0.0.img
-SHA-256: e82ae9a414dc454dfb1601b0bf2dccbef93925d188bcd4c8185e261034e801f0
+SHA-256: 2b9c2a82bb45775f573e30976e207ba4d29322775fc9c60d212c1f6f139d0d77
 ```
 
-The corresponding ELF sizes are `text=366368`, `data=1428`, and `bss=82400`.
-Its load segment uses `0x30044000..0x3009dd93` for file-backed data and ends at
-`0x300b1f7f` after BSS/stack allocation, within the configured SRAM region.
+The corresponding ELF sizes are `text=442876`, `data=1712`, and `bss=86304`.
+Its load segment uses `0x30044000..0x300b09af` for file-backed data and ends at
+`0x300c5adf` after BSS/stack allocation, within the configured SRAM region.
 
 An `img2simg` error about `libselinux.so.1` only affects optional sparse image
 conversion. The raw `.img` above is still generated and is the AiBurn input.
@@ -317,3 +317,40 @@ moving block, and a frame counter through LVGL's NuttX `/dev/fb0` backend. An
 optional duration from 5 to 300 seconds may be supplied. GT911 touch drives
 the interactive controls through `/dev/input0`; `/dev/dpad` supplies focus
 navigation without taking ownership of WAKEUP.
+
+Verify the onboard PDM microphones separately:
+
+```text
+nsh> mic_test record /data/mic.wav 3
+nsh> ls -l /data/mic.wav
+nsh> mic_test play /data/mic.wav
+nsh> mic_test loop /data/mic.wav 3
+```
+
+PD.16 supplies DMIC clock and PD.17 receives DMIC data. Capture is fixed to
+16000 Hz mono S16 for this validation and is registered as
+`/dev/audio/pcm0c`. DMA request 14 uses channel 1 with two explicit,
+32-byte-aligned 8192-byte cyclic descriptors. The earlier code captured one
+period, producing a valid 4140-byte WAV, but DMA later observed zero descriptor
+fields despite correct CPU-side links. The vendor cache-range implementation
+used a fixed-register T-Head instruction without a matching compiler operand.
+This image replaces it locally with constrained clean/invalidate operations
+for both descriptors and capture buffers. Continuous three-second recording
+and WAV finalization have passed on the board.
+
+The next board adaptation is GMAC0 RMII Ethernet:
+
+```text
+GMAC0:       0x10280000, raw CLIC source 39
+PHY:         RTL8201F, MDIO address 0
+RJ45:        HR911105A
+RMII:        PE.0..PE.5 and PE.7..PE.9, mux function 2
+PHY reset:   PE.6 GPIO, active low
+PHY clock:   PE.10 CLK_OUT2 25 MHz
+RMII refclk: RTL8201F to PE.3, 50 MHz
+```
+
+The first checkpoint is limited to clocks, SYSCFG RMII external-clock mode,
+pinmux, reset sequencing, MDIO, PHY ID, and link state. Packet DMA follows only
+after that passes. RX/TX descriptors and packet buffers require 32-byte
+alignment and the same compiler-constrained cache operations proven by DMIC.

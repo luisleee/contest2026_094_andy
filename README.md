@@ -19,6 +19,9 @@ on-chip SRAM, and exposes an interactive NSH console on UART0 at 115200 baud.
 - `app/wdt_test/`: bounded keepalive and confirmed reset tests for the WDT.
 - `app/rtc_test/`: RTC counter, UTC set, and alarm interrupt tests.
 - `app/flash_test/`: SPI NOR checks and bounded `/data` persistence tests.
+- `app/tf_test/`: SDMC1 TF-card mount, geometry, and read/write tests.
+- `app/speaker_test/`: DSPK1 WAV playback and generated-tone tests.
+- `app/mic_test/`: DMIC capture to WAV and immediate speaker loopback.
 - `logs/`: exported AI coding logs and submission metadata.
 
 The manifest maps these directories into the openvela workspace without
@@ -44,12 +47,12 @@ Burn this image with AiBurn:
 
 ```text
 vendor/artinchip/pack/prebuilt/d13x_demo88-nor_v1.0.0.img
-SHA-256: e82ae9a414dc454dfb1601b0bf2dccbef93925d188bcd4c8185e261034e801f0
+SHA-256: 2b9c2a82bb45775f573e30976e207ba4d29322775fc9c60d212c1f6f139d0d77
 ```
 
-The corresponding ELF sizes are `text=366368`, `data=1428`, and `bss=82400`.
-Its load segment uses `0x30044000..0x3009dd93` for file-backed data and ends at
-`0x300b1f7f` after BSS/stack allocation.
+The corresponding ELF sizes are `text=442876`, `data=1712`, and `bss=86304`.
+Its load segment uses `0x30044000..0x300b09af` for file-backed data and ends at
+`0x300c5adf` after BSS/stack allocation.
 
 Use UART0 with `115200 8N1` and no flow control. A successful boot reaches:
 
@@ -361,3 +364,60 @@ nsh> free
 The display should show color swatches, interactive controls, an animated
 progress bar, a moving block, and a frame counter. Use `lvgl_test 60` to select
 a duration from 5 to 300 seconds.
+
+## Digital Microphone Test
+
+The onboard PDM microphones use PD.16 for DMIC clock and PD.17 for DMIC data.
+The board registers the capture lower-half as `/dev/audio/pcm0c`; speaker
+playback remains `/dev/audio/pcm0p`. Capture uses DMA request 14 on channel 1.
+The D13x DMA interrupt is raw CLIC source 32 and NuttX IRQ 48.
+
+The first validation format is fixed at 16000 Hz, mono, signed 16-bit
+little-endian PCM. The lower-half uses two aligned 8192-byte buffers as a
+continuous cyclic DMA ring, matching the Luban D13x v1.x task layout. The two
+32-byte-aligned descriptors are owned by the lower-half, linked in both
+directions, cache-cleaned, and submitted directly to DMA channel 1. The test
+records through the public nxrecorder API, then converts stock raw-PCM output
+to a standard RIFF/WAV file in place. It also accepts nxrecorder variants that
+already emit WAV, so the contest source does not require private recorder
+interfaces.
+
+```text
+nsh> ls /dev/audio
+/dev/audio/pcm0c
+/dev/audio/pcm0p
+
+nsh> mic_test record /data/mic.wav 3
+nsh> ls -l /data/mic.wav
+nsh> mic_test play /data/mic.wav
+nsh> mic_test loop /data/mic.wav 3
+```
+
+The path defaults to `/data/mic.wav` and duration defaults to three seconds.
+Accepted durations are one through five seconds to keep LittleFS use bounded.
+The board has captured one 8192-byte DMA period and saved a valid 4140-byte WAV
+containing 4096 bytes of converted mono S16 PCM. A later diagnostic proved the
+CPU-side cyclic links were correct while DMA still loaded zero descriptor
+fields. Disassembly exposed the cause: the vendor cache-range helper emits a
+fixed-register T-Head cache instruction without constraining the compiler's
+loop address to that register. The current image uses local cache maintenance
+with an explicit `a5` constraint for both descriptors and capture buffers.
+Continuous three-second capture and WAV finalization now pass on the physical
+board. The speaker path is independently verified; `mic_test loop` remains the
+recommended combined regression command.
+
+## Next: Wired Ethernet
+
+The next adaptation target is the populated GMAC0 RMII path. The board uses an
+RTL8201F PHY at MDIO address 0 and an HR911105A RJ45. PE.0..PE.5 and PE.7..PE.9
+use mux function 2 for RMII data and management signals. PE.6 is the active-low
+PHY reset GPIO. PE.10 uses mux function 2 as CLK_OUT2 and supplies the PHY with
+25 MHz; the PHY returns the 50 MHz RMII reference clock on PE.3.
+
+Bring-up will be split into two checkpoints. The first enables GMAC0 clock and
+reset, pinmux, SYSCFG RMII external-clock selection, PHY reset, and MDIO reads;
+it must identify the RTL8201F at address 0 before packet DMA is enabled. The
+second registers a NuttX Ethernet interface and adds cache-safe RX/TX descriptor
+rings, IPv4/ARP/ICMP, DHCP, UDP/TCP, and ping tests. Ethernet buffers must reuse
+the DMIC-proven constrained cache maintenance rather than the broken vendor
+range helper.
