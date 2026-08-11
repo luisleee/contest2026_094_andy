@@ -50,6 +50,12 @@ config AIC_BOOTLOADER_LOAD_BASE
       This should stay 0x100 bytes below the text base to match the ArtInChip
       boot image header layout used by mk_image.py.
 
+config AIC_AUDIO_DRV_V11
+    bool
+    default y
+    help
+      Select the AUDIO v1.1 register layout implemented by D13x.
+
 config D13X_I2C
     bool "D13x polled I2C master support"
     select I2C

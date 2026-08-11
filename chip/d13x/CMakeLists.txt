@@ -67,6 +67,16 @@ if(CONFIG_AIC_USING_AUDIO)
        ${AIC_DRV_DIR}/audio/aic_drv_audio.c)
 endif()
 
+if(CONFIG_AIC_USING_DMA)
+  list(APPEND SRCS
+       ${AIC_HAL_DIR}/dma/hal_dma.c
+       ${AIC_DRV_DIR}/dma/aic_drv_dma.c)
+endif()
+
+if(CONFIG_AIC_AUDIO_DMIC)
+  list(APPEND SRCS d13x_dmic.c)
+endif()
+
 if(CONFIG_D13X_DISPLAY)
   list(APPEND SRCS d13x_fb.c d13x_de.c d13x_lvds.c d13x_panel.c)
 endif()
@@ -105,6 +115,27 @@ if(CONFIG_USING_SFUD)
 endif()
 
 target_sources(arch PRIVATE ${SRCS})
+
+if(CONFIG_AIC_USING_DMA)
+  target_compile_options(
+    arch PRIVATE -include
+                 ${CMAKE_CURRENT_LIST_DIR}/include/d13x_dma_compat.h)
+endif()
+
+if(CONFIG_ARCH_RV_ISA_ZICSR_ZIFENCEI)
+  if(CONFIG_ARCH_FPU OR CONFIG_ARCH_DPFPU)
+    set(D13X_MARCH -march=rv32imafdc_zicsr_zifencei)
+  else()
+    set(D13X_MARCH -march=rv32imac_zicsr_zifencei)
+  endif()
+
+  set_property(TARGET nuttx APPEND PROPERTY NUTTX_COMPILE_OPTIONS
+                                            ${D13X_MARCH})
+  if(TARGET nuttx_apps_interface)
+    set_property(TARGET nuttx_apps_interface APPEND PROPERTY
+                 APPS_COMPILE_OPTIONS ${D13X_MARCH})
+  endif()
+endif()
 
 target_include_directories(
   arch

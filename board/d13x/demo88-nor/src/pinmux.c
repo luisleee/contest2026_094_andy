@@ -62,6 +62,12 @@ struct aic_pinmux aic_pinmux_config[] =
 
   {5, PIN_PULL_DIS, 3, "PE.12"},
   {1, PIN_PULL_DIS, 3, CONFIG_AIC_AUDIO_PA_ENABLE_GPIO},
+#ifdef CONFIG_AIC_AUDIO_DMIC
+  /* Onboard PDM microphones: shared clock on PD.16 and data on PD.17. */
+
+  {4, PIN_PULL_DIS, 3, "PD.16"},
+  {4, PIN_PULL_DIS, 3, "PD.17"},
+#endif
 #endif
 #ifdef CONFIG_D13X_DISPLAY
   /* J18 single-link LVDS. J3 MIPI uses the same pins with function 4. */

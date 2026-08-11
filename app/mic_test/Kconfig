@@ -1,0 +1,11 @@
+#
+# Contest 2026 team 094 microphone test app
+#
+
+config LVX_USE_DEMO_CONTEST2026_094_MIC_TEST
+	bool "Contest 2026 team 094 microphone test"
+	default n
+	depends on AUDIO && SYSTEM_NXRECORDER && SYSTEM_NXPLAYER
+	---help---
+		Enable the mic_test NSH command for bounded DMIC WAV recording,
+		storage in /data, and playback through /dev/audio/pcm0p.
