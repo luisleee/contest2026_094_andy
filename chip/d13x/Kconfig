@@ -131,9 +131,34 @@ config D13X_SDMC1
     select SCHED_HPWORK
     help
       Enable the demo88-nor J5 TF-card connector on SDMC1. The initial
-      implementation registers /dev/mmcsd1 for a card inserted at boot and
+      implementation registers /dev/mmcsd0 for a card inserted at boot and
       uses bounded polling/PIO transfers without a hotplug poller or automatic
       mount. HPWORK is retained for the standard MMC/SD media callback ABI.
+
+config D13X_SDMC0_WIFI
+    bool "SDMC0 SDIO Wi-Fi probe support"
+    select DRIVER_SDMC_HAL_EN
+    select AIC_SDMC_DRV
+    select AIC_USING_SDMC0
+    select AIC_SDMC0_IS_SDIO
+    select MMCSD
+    select MMCSD_SDIO
+    select SDIO_BLOCKSETUP
+    select SCHED_HPWORK
+    help
+      Enable a conservative SDMC0 SDIO bring-up path for the demo88-nor Wi-Fi
+      module. This first milestone powers the module and probes the SDIO card
+      with CMD5; it does not register a full wlan0 network driver.
+
+config D13X_SDMC0_WIFI_POWER_GPIO
+    string "SDMC0 Wi-Fi power GPIO"
+    default "PD.7"
+    depends on D13X_SDMC0_WIFI
+    help
+      GPIO used to power or release reset for the onboard SDIO Wi-Fi module.
+      The hardware manual groups Wi-Fi/Bluetooth power signals on PD.4..PD.7;
+      Luban-Lite uses PD.6 for BT_PWR_ON, so PD.7 is the conservative Wi-Fi
+      default until board probing says otherwise.
 
 config D13X_GMAC
     bool "GMAC0 RMII Ethernet support"

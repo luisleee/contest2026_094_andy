@@ -53,7 +53,7 @@ if(CONFIG_D13X_RTC)
        ${AIC_HAL_DIR}/rtc/hal_rtc.c)
 endif()
 
-if(CONFIG_D13X_SDMC1)
+if(CONFIG_D13X_SDMC1 OR CONFIG_D13X_SDMC0_WIFI)
   list(APPEND SRCS
        d13x_sdmc.c
        ${AIC_HAL_DIR}/sdmc/bouncebuf.c

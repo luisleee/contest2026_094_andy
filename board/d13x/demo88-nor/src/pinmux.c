@@ -42,6 +42,17 @@ struct aic_pinmux aic_pinmux_config[] =
   {2, PIN_PULL_UP, 3, "PC.5"},
   {2, PIN_PULL_UP, 3, "PC.6"},
 #endif
+#ifdef CONFIG_D13X_SDMC0_WIFI
+  /* Onboard SDIO Wi-Fi: SDMC0 D0..D3/CMD/CLK plus module power. */
+
+  {2, PIN_PULL_UP, 7, "PB.6"},
+  {2, PIN_PULL_UP, 7, "PB.7"},
+  {2, PIN_PULL_UP, 7, "PB.8"},
+  {2, PIN_PULL_UP, 7, "PB.9"},
+  {2, PIN_PULL_UP, 7, "PB.10"},
+  {2, PIN_PULL_UP, 7, "PB.11"},
+  {1, PIN_PULL_DIS, 3, CONFIG_D13X_SDMC0_WIFI_POWER_GPIO},
+#endif
 #ifdef CONFIG_D13X_GMAC
   /* HR911105A RJ45 through RTL8201F: GMAC0 RMII plus CLK_OUT2 to the PHY. */
 

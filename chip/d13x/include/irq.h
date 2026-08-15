@@ -9,6 +9,7 @@
 
 #define D13X_IRQ_DMA          (D13X_IRQ_PERI_START + 16)
 #define D13X_IRQ_GMAC0        (D13X_IRQ_PERI_START + 23) /* Raw IRQ 39 */
+#define D13X_IRQ_SDMC0        (D13X_IRQ_PERI_START + 30) /* Raw IRQ 46 */
 #define D13X_IRQ_SDMC1        (D13X_IRQ_PERI_START + 31) /* Raw IRQ 47 */
 #define D13X_IRQ_RTC          (D13X_IRQ_PERI_START + 34) /* Raw IRQ 50 */
 #define D13X_IRQ_WDT          (D13X_IRQ_PERI_START + 48) /* Raw IRQ 64 */

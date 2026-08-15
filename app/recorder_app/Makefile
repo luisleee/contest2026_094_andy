@@ -1,14 +1,14 @@
 ############################################################################
-# Contest 2026 team 094 TF-card test app
+# Contest 2026 team 094 LVGL recorder app
 ############################################################################
 
 include $(APPDIR)/Make.defs
 
-PROGNAME  = tf_test
+PROGNAME  = recorder
 PRIORITY  = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 8192
-MODULE    = $(CONFIG_LVX_USE_DEMO_CONTEST2026_094_TF_TEST)
+STACKSIZE = $(CONFIG_LVX_USE_DEMO_CONTEST2026_094_RECORDER_STACKSIZE)
+MODULE    = $(CONFIG_LVX_USE_DEMO_CONTEST2026_094_RECORDER_APP)
 
-MAINSRC = tf_test_main.c
+MAINSRC = recorder_app_main.c
 
 include $(APPDIR)/Application.mk

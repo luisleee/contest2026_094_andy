@@ -163,7 +163,6 @@ static int d13x_fb_updatearea(struct fb_vtable_s *vtable,
     }
 
   d13x_fb_clean_cache();
-  d13x_de_set_framebuffer((uintptr_t)g_d13x_fb.memory);
   return OK;
 }
 #endif

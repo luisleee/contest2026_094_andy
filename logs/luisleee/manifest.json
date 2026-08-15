@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0",
+  "team_id": "contest2026_094_andy",
+  "github_login": "luisleee",
+  "generator": "claude-code-collector@1.2.0",
+  "updated_at": "2026-08-15T12:51:18.024Z",
+  "sessions": [
+    {
+      "session_id": "019f223b-6519-72a2-bf14-9652f5342a9c",
+      "tool": "codex",
+      "started_at": "2026-07-02T09:49:05.691Z",
+      "last_event_at": "2026-07-13T14:41:13.080Z",
+      "event_count": 4943,
+      "raw_event_count": 8469,
+      "file_path": "logs/luisleee/2026-07-02/codex__019f223b-6519-72a2-bf14-9652f5342a9c.jsonl",
+      "collection_mode": "cli",
+      "health": "ok",
+      "model": "gpt-5.5",
+      "tokens_total": 175935881,
+      "source_rollout_file": "rollout-2026-07-02T17-49-05-019f223b-6519-72a2-bf14-9652f5342a9c.jsonl"
+    },
+    {
+      "session_id": "019f8a44-fc95-7430-8cde-62178c929332",
+      "tool": "codex",
+      "started_at": "2026-07-22T14:40:04.759Z",
+      "last_event_at": "2026-07-22T15:39:17.094Z",
+      "event_count": 226,
+      "raw_event_count": 483,
+      "file_path": "logs/luisleee/2026-07-22/codex__019f8a44-fc95-7430-8cde-62178c929332.jsonl",
+      "collection_mode": "cli",
+      "health": "ok",
+      "model": "gpt-5.5",
+      "tokens_total": 21680652,
+      "source_rollout_file": "rollout-2026-07-22T22-40-04-019f8a44-fc95-7430-8cde-62178c929332.jsonl"
+    },
+    {
+      "session_id": "019f8a9f-5ae1-7c70-a565-c3cf96b71762",
+      "tool": "codex",
+      "started_at": "2026-07-22T16:18:47.139Z",
+      "last_event_at": "2026-08-11T15:07:25.508Z",
+      "event_count": 1360,
+      "raw_event_count": 4716,
+      "file_path": "logs/luisleee/2026-07-23/codex__019f8a9f-5ae1-7c70-a565-c3cf96b71762.jsonl",
+      "collection_mode": "cli",
+      "health": "ok",
+      "model": "gpt-5.6-sol",
+      "tokens_total": 324003533,
+      "source_rollout_file": "rollout-2026-07-23T00-18-47-019f8a9f-5ae1-7c70-a565-c3cf96b71762.jsonl"
+    },
+    {
+      "session_id": "019ff168-49a3-7741-a5eb-8f74a6d58297",
+      "tool": "codex",
+      "started_at": "2026-08-11T15:19:31.492Z",
+      "last_event_at": "2026-08-14T14:10:52.473Z",
+      "event_count": 5292,
+      "raw_event_count": 10545,
+      "file_path": "logs/luisleee/2026-08-11/codex__019ff168-49a3-7741-a5eb-8f74a6d58297.jsonl",
+      "collection_mode": "cli",
+      "health": "ok",
+      "model": "gpt-5.5",
+      "tokens_total": 327995947,
+      "source_rollout_file": "rollout-2026-08-11T23-19-31-019ff168-49a3-7741-a5eb-8f74a6d58297.jsonl"
+    },
+    {
+      "session_id": "bc6f1999-5051-4d91-8720-7cc3a3db5cd9",
+      "tool": "claude-code",
+      "started_at": "2026-08-15T07:01:05.958Z",
+      "last_event_at": "2026-08-15T07:01:05.958Z",
+      "event_count": 1,
+      "raw_event_count": 10,
+      "file_path": "logs/luisleee/2026-08-15/claude-code__bc6f1999-5051-4d91-8720-7cc3a3db5cd9.jsonl",
+      "collection_mode": "cli",
+      "health": "ok"
+    },
+    {
+      "session_id": "117b0bc5-47dc-440b-8bf3-644b03408824",
+      "tool": "claude-code",
+      "started_at": "2026-08-15T07:01:06.099Z",
+      "last_event_at": "2026-08-15T07:01:06.099Z",
+      "event_count": 134,
+      "raw_event_count": 157,
+      "file_path": "logs/luisleee/2026-08-15/claude-code__117b0bc5-47dc-440b-8bf3-644b03408824.jsonl",
+      "collection_mode": "cli",
+      "health": "ok",
+      "model": "mimo-v2.5-pro"
+    },
+    {
+      "session_id": "92b708ac-2fcd-408f-90b2-1bece2d19677",
+      "tool": "claude-code",
+      "started_at": "2026-08-15T07:01:06.393Z",
+      "last_event_at": "2026-08-15T07:01:06.393Z",
+      "event_count": 74,
+      "raw_event_count": 112,
+      "file_path": "logs/luisleee/2026-08-15/claude-code__92b708ac-2fcd-408f-90b2-1bece2d19677.jsonl",
+      "collection_mode": "cli",
+      "health": "ok",
+      "model": "<synthetic>"
+    }
+  ]
+}

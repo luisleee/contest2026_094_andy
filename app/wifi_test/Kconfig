@@ -1,0 +1,19 @@
+#
+# Contest 2026 team 094 SDIO Wi-Fi probe app
+#
+
+config LVX_USE_DEMO_CONTEST2026_094_WIFI_TEST
+	bool "Contest 2026 team 094 SDIO Wi-Fi probe"
+	default n
+	depends on D13X_SDMC0_WIFI
+	---help---
+		Enable the wifi_test NSH command for the demo88-nor SDMC0 Wi-Fi
+		module. This only probes SDIO CMD5 and does not register wlan0.
+
+config LVX_USE_DEMO_CONTEST2026_094_WIFI_AUTO_START
+	bool "Auto start contest 094 Wi-Fi during board bringup"
+	default n
+	depends on LVX_USE_DEMO_CONTEST2026_094_WIFI_TEST
+	---help---
+		Automatically load Wi-Fi firmware, run bringup, and register wlan0
+		during board bringup. Keep this disabled for fast NSH startup.

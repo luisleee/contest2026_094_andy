@@ -7,5 +7,5 @@ config LVX_USE_DEMO_CONTEST2026_094_TF_TEST
 	default n
 	depends on MMCSD && FS_FATFS
 	---help---
-		Enable the tf_test NSH command for /dev/mmcsd1 and /sdcard.
+		Enable the tf_test NSH command for /dev/mmcsd0 and /data/sdcard.
 		The test never formats the card and only modifies tf_test.bin.

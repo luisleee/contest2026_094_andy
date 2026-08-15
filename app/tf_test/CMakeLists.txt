@@ -3,5 +3,5 @@ if(CONFIG_LVX_USE_DEMO_CONTEST2026_094_TF_TEST)
   nuttx_add_application(
     NAME tf_test
     SRCS tf_test_main.c
-    STACKSIZE 3072)
+    STACKSIZE 8192)
 endif()
