@@ -15,6 +15,7 @@
 #include <nuttx/audio/pcm.h>
 #include <nuttx/i2c/i2c_master.h>
 #include <nuttx/input/buttons.h>
+#include <nuttx/kthread.h>
 #include <nuttx/video/fb.h>
 
 #include <arch/chip/d13x_i2c.h>
@@ -24,6 +25,36 @@
 
 #include <aic_utils.h>
 #include "board.h"
+
+#define D13X_SDCARD_WORKER_PRIORITY (SCHED_PRIORITY_DEFAULT - 10)
+#define D13X_SDCARD_WORKER_STACKSIZE 4096
+
+#ifdef CONFIG_LVX_USE_DEMO_CONTEST2026_094_WIFI_AUTO_START
+extern int wifi_test_auto_start(void);
+#endif
+
+#ifdef CONFIG_D13X_SDMC1
+static int d13x_sdcard_mount_worker(int argc, FAR char *argv[])
+{
+  int ret;
+
+  UNUSED(argc);
+  UNUSED(argv);
+
+  ret = d13x_sdmc1_mount();
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "[D13X] SD card mount at /sdcard failed: %d\n",
+             ret);
+    }
+  else
+    {
+      syslog(LOG_INFO, "[D13X] SD card mounted at /sdcard\n");
+    }
+
+  return ret;
+}
+#endif
 
 /****************************************************************************
  * Public Functions
@@ -108,16 +139,14 @@ int d13x_board_bringup(void)
 #endif
 
 #ifdef CONFIG_D13X_SDMC1
-  ret = d13x_sdmc1_initialize();
+  ret = kthread_create("sdcard_mount", D13X_SDCARD_WORKER_PRIORITY,
+                       D13X_SDCARD_WORKER_STACKSIZE,
+                       d13x_sdcard_mount_worker, NULL);
   if (ret < 0)
     {
-      syslog(LOG_ERR, "[D13X] failed to register /dev/mmcsd1: %d\n", ret);
+      syslog(LOG_ERR, "[D13X] failed to start SD mount worker: %d\n",
+             ret);
       result = ret;
-    }
-  else
-    {
-      syslog(LOG_INFO,
-             "[D13X] SDMC1 TF card registered as /dev/mmcsd1\n");
     }
 #endif
 
@@ -188,6 +217,23 @@ int d13x_board_bringup(void)
   else
     {
       syslog(LOG_INFO, "[D13X] PWM1 registered as /dev/pwm1\n");
+    }
+#endif
+
+#ifdef CONFIG_LVX_USE_DEMO_CONTEST2026_094_WIFI_AUTO_START
+  ret = wifi_test_auto_start();
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "[D13X] failed to initialize wlan0: %d\n", ret);
+      result = ret;
+    }
+  else if (ret > 0)
+    {
+      syslog(LOG_ERR, "[D13X] failed to initialize wlan0: %d\n", ret);
+    }
+  else
+    {
+      syslog(LOG_INFO, "[D13X] wlan0 registered\n");
     }
 #endif
 

@@ -1,14 +1,14 @@
 ############################################################################
-# Contest 2026 team 094 TF-card test app
+# Contest 2026 team 094 SDIO Wi-Fi probe app
 ############################################################################
 
 include $(APPDIR)/Make.defs
 
-PROGNAME  = tf_test
-PRIORITY  = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 8192
-MODULE    = $(CONFIG_LVX_USE_DEMO_CONTEST2026_094_TF_TEST)
+PROGNAME = wifi_test
+PRIORITY = SCHED_PRIORITY_DEFAULT
+STACKSIZE = 3072
+MODULE = $(CONFIG_LVX_USE_DEMO_CONTEST2026_094_WIFI_TEST)
 
-MAINSRC = tf_test_main.c
+MAINSRC = wifi_test_main.c
 
 include $(APPDIR)/Application.mk

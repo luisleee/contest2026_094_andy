@@ -61,4 +61,7 @@ SECTIONS
         _sheap = .;
         _eheap = ORIGIN(sram) + LENGTH(sram);
     } > sram
+
+    ASSERT((_eheap - _sheap) >= 0x1000,
+           "D13X SRAM startup heap is smaller than 4 KiB")
 }

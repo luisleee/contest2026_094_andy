@@ -17,6 +17,7 @@
 #include <nuttx/kmalloc.h>
 #include <nuttx/queue.h>
 #include <nuttx/semaphore.h>
+#include <nuttx/signal.h>
 
 #include <aic_drv_dma.h>
 #include <aic_soc.h>
@@ -94,6 +95,8 @@ struct d13x_dmic_s
   FAR uint8_t *alloc_addr;
   uint32_t samplerate;
   uint32_t buffers_completed;
+  uint32_t peak_sequence;
+  uint8_t peak_percent;
   uint8_t channels;
   uint8_t samplebits;
   uint8_t alloc_index;
@@ -104,6 +107,7 @@ struct d13x_dmic_s
   bool dma_ready;
   bool worker_wakeup;
   bool stopping;
+  bool paused;
 };
 
 static struct d13x_dmic_s g_d13x_dmic;
@@ -355,8 +359,10 @@ static void d13x_dmic_prepare_buffer(FAR struct d13x_dmic_s *priv,
 {
   FAR uint32_t *source;
   FAR int16_t *sink;
+  uint32_t peak = 0;
   uint32_t samples;
   uint32_t index;
+  irqstate_t flags;
 
   d13x_dmic_cache_invalidate((uintptr_t)apb->samp, apb->nmaxbytes);
   apb->curbyte = 0;
@@ -374,6 +380,29 @@ static void d13x_dmic_prepare_buffer(FAR struct d13x_dmic_s *priv,
 
       apb->nbytes = samples * sizeof(int16_t);
     }
+
+  sink = (FAR int16_t *)apb->samp;
+  samples = apb->nbytes / sizeof(int16_t);
+  for (index = 0; index < samples; index++)
+    {
+      uint32_t magnitude;
+
+      magnitude = sink[index] < 0 ? -(int32_t)sink[index] : sink[index];
+      if (magnitude > peak)
+        {
+          peak = magnitude;
+        }
+    }
+
+  flags = enter_critical_section();
+  priv->peak_percent = (uint8_t)((peak * 100u) / 32768u);
+  if (priv->peak_percent == 0 && peak != 0)
+    {
+      priv->peak_percent = 1;
+    }
+
+  priv->peak_sequence++;
+  leave_critical_section(flags);
 }
 
 static int d13x_dmic_start_dma(FAR struct d13x_dmic_s *priv)
@@ -541,6 +570,8 @@ static int d13x_dmic_worker(int argc, FAR char *argv[])
                 {
                   break;
                 }
+
+              nxsig_usleep(1000);
             }
 
           flags = enter_critical_section();
@@ -733,8 +764,10 @@ static int d13x_dmic_start(FAR struct audio_lowerhalf_s *dev)
     }
 
   priv->started = true;
+  priv->paused = false;
   priv->xrun = false;
   priv->buffers_completed = 0;
+  priv->peak_percent = 0;
   d13x_dmic_hw_start();
   d13x_dmic_kick_worker(priv);
   return OK;
@@ -778,6 +811,70 @@ static int d13x_dmic_stop(FAR struct audio_lowerhalf_s *dev)
     }
 
   d13x_dmic_kick_worker(priv);
+  return OK;
+}
+#endif
+
+#ifndef CONFIG_AUDIO_EXCLUDE_PAUSE_RESUME
+static int d13x_dmic_pause(FAR struct audio_lowerhalf_s *dev)
+{
+  FAR struct d13x_dmic_s *priv = (FAR struct d13x_dmic_s *)dev;
+  FAR hal_dma_handle_t *hdma = &priv->dma.hal;
+  irqstate_t flags;
+  uint32_t value;
+
+  flags = enter_critical_section();
+  if (!priv->started || !priv->dma_ready)
+    {
+      leave_critical_section(flags);
+      return -EIO;
+    }
+
+  if (priv->paused)
+    {
+      leave_critical_section(flags);
+      return OK;
+    }
+
+  priv->paused = true;
+  leave_critical_section(flags);
+
+  writel(1, DMA_CH_PAUSE_REG(hdma, D13X_DMIC_DMA_CHANNEL));
+  value = readl(D13X_AUDIO_FIFO_INT_EN);
+  writel(value & ~D13X_DMIC_DRQ_EN, D13X_AUDIO_FIFO_INT_EN);
+  value = readl(D13X_AUDIO_GLOBE_CTL);
+  writel(value & ~D13X_AUDIO_RX_GLBEN, D13X_AUDIO_GLOBE_CTL);
+  return OK;
+}
+
+static int d13x_dmic_resume(FAR struct audio_lowerhalf_s *dev)
+{
+  FAR struct d13x_dmic_s *priv = (FAR struct d13x_dmic_s *)dev;
+  FAR hal_dma_handle_t *hdma = &priv->dma.hal;
+  irqstate_t flags;
+  uint32_t value;
+
+  flags = enter_critical_section();
+  if (!priv->started || !priv->dma_ready)
+    {
+      leave_critical_section(flags);
+      return -EIO;
+    }
+
+  if (!priv->paused)
+    {
+      leave_critical_section(flags);
+      return OK;
+    }
+
+  priv->paused = false;
+  leave_critical_section(flags);
+
+  writel(0, DMA_CH_PAUSE_REG(hdma, D13X_DMIC_DMA_CHANNEL));
+  value = readl(D13X_AUDIO_GLOBE_CTL);
+  writel(value | D13X_AUDIO_RX_GLBEN, D13X_AUDIO_GLOBE_CTL);
+  value = readl(D13X_AUDIO_FIFO_INT_EN);
+  writel(value | D13X_DMIC_DRQ_EN, D13X_AUDIO_FIFO_INT_EN);
   return OK;
 }
 #endif
@@ -940,6 +1037,10 @@ static const struct audio_ops_s g_d13x_dmic_ops =
 #ifndef CONFIG_AUDIO_EXCLUDE_STOP
   .stop = d13x_dmic_stop,
 #endif
+#ifndef CONFIG_AUDIO_EXCLUDE_PAUSE_RESUME
+  .pause = d13x_dmic_pause,
+  .resume = d13x_dmic_resume,
+#endif
   .allocbuffer = d13x_dmic_allocbuffer,
   .freebuffer = d13x_dmic_freebuffer,
   .enqueuebuffer = d13x_dmic_enqueuebuffer,
@@ -1000,4 +1101,21 @@ FAR struct audio_lowerhalf_s *aic_dmic_initialize(void)
     }
 
   return &priv->dev;
+}
+
+int d13x_dmic_get_peak(FAR uint32_t *sequence, FAR uint8_t *peak_percent)
+{
+  FAR struct d13x_dmic_s *priv = &g_d13x_dmic;
+  irqstate_t flags;
+
+  if (sequence == NULL || peak_percent == NULL)
+    {
+      return -EINVAL;
+    }
+
+  flags = enter_critical_section();
+  *sequence = priv->peak_sequence;
+  *peak_percent = priv->peak_percent;
+  leave_critical_section(flags);
+  return OK;
 }

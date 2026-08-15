@@ -12,20 +12,46 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/statfs.h>
 #include <unistd.h>
 
 #include <nuttx/audio/audio.h>
+#include <nuttx/fs/fs.h>
 #include <system/nxplayer.h>
 #include <system/nxrecorder.h>
 
 #define MIC_TEST_CAPTURE_DEVICE "/dev/audio/pcm0c"
 #define MIC_TEST_PLAY_DEVICE    "/dev/audio/pcm0p"
-#define MIC_TEST_DEFAULT_WAV    "/data/mic.wav"
+#define MIC_TEST_DEFAULT_WAV    "/sdcard/mic.wav"
 #define MIC_TEST_SAMPLE_RATE    16000
 #define MIC_TEST_CHANNELS       1
 #define MIC_TEST_SAMPLE_BITS    16
 #define MIC_TEST_WAV_HEADER_SIZE 44
 #define MIC_TEST_COPY_SIZE       4096
+#define MIC_TEST_STATUS_INTERVAL_US 250000
+
+extern int d13x_dmic_get_peak(FAR uint32_t *sequence,
+                              FAR uint8_t *peak_percent);
+
+static int mic_test_require_sdcard(FAR const char *path)
+{
+  struct statfs filesystem;
+
+  if (strncmp(path, "/sdcard/", strlen("/sdcard/")) != 0)
+    {
+      return OK;
+    }
+
+  if (statfs("/sdcard", &filesystem) == 0 &&
+      filesystem.f_type == FATFS_SUPER_MAGIC)
+    {
+      return OK;
+    }
+
+  printf("mic_test: /sdcard is not a mounted FAT filesystem\n");
+  printf("mic_test: refusing to record into NOR; run 'tf_test mount' first\n");
+  return -ENODEV;
+}
 
 static void mic_test_put_le16(FAR uint8_t *buffer, uint16_t value)
 {
@@ -241,8 +267,20 @@ static int mic_test_record(FAR const char *path, uint32_t seconds)
   struct sched_param capture_param;
   struct sched_param saved_param;
   struct stat file_stat;
+  uint32_t peak_sequence;
+  uint32_t previous_sequence = 0;
+  uint32_t intervals;
+  uint32_t interval;
+  uint8_t peak_percent;
   int priority_raised = 0;
+  int start_status;
   int ret;
+
+  ret = mic_test_require_sdcard(path);
+  if (ret < 0)
+    {
+      return 1;
+    }
 
   unlink(path);
 
@@ -293,8 +331,26 @@ static int mic_test_record(FAR const char *path, uint32_t seconds)
       return 1;
     }
 
-  printf("mic_test: capture started\n");
-  sleep(seconds);
+  printf("mic_test: capture request submitted\n");
+  intervals = seconds * 1000000 / MIC_TEST_STATUS_INTERVAL_US;
+  for (interval = 0; interval < intervals; interval++)
+    {
+      usleep(MIC_TEST_STATUS_INTERVAL_US);
+      peak_sequence = 0;
+      peak_percent = 0;
+      d13x_dmic_get_peak(&peak_sequence, &peak_percent);
+      start_status = nxrecorder_getstartstatus(recorder);
+      printf("mic_test: t=%lu ms start=%d dma_seq=%lu%s "
+             "peak=%u%% bytes=%lu\n",
+             (unsigned long)((interval + 1) *
+                             (MIC_TEST_STATUS_INTERVAL_US / 1000)),
+             start_status, (unsigned long)peak_sequence,
+             peak_sequence == previous_sequence ? " (stalled)" : "",
+             peak_percent,
+             (unsigned long)nxrecorder_getbyteswritten(recorder));
+      previous_sequence = peak_sequence;
+    }
+
   printf("mic_test: stopping capture\n");
   ret = nxrecorder_stop(recorder);
   if (priority_raised)

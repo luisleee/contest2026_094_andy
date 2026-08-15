@@ -9,6 +9,7 @@
 #include <debug.h>
 
 #include <nuttx/arch.h>
+#include <nuttx/kmalloc.h>
 #include <nuttx/timers/arch_alarm.h>
 
 #include <arch/irq.h>
@@ -22,6 +23,9 @@
 #define D13X_GTC_CLOCK_REG     (CMU_BASE + 0x090cUL)
 #define D13X_GTC_FREQUENCY     4000000UL
 
+#define D13X_PSRAM_HEAP_START  0x40140000UL
+#define D13X_PSRAM_HEAP_SIZE   0x00100000UL
+
 void up_allocate_heap(void **heap_start, size_t *heap_size)
 {
   extern uintptr_t _sheap;
@@ -29,6 +33,13 @@ void up_allocate_heap(void **heap_start, size_t *heap_size)
   *heap_start = (void *)&_sheap;
   *heap_size = (size_t)((uintptr_t)&_eheap - (uintptr_t)&_sheap);
 }
+
+#if CONFIG_MM_REGIONS > 1
+void riscv_addregion(void)
+{
+  kumm_addregion((void *)D13X_PSRAM_HEAP_START, D13X_PSRAM_HEAP_SIZE);
+}
+#endif
 
 void up_timer_initialize(void)
 {

@@ -1,0 +1,24 @@
+#
+# Contest 2026 team 094 LVGL recorder app
+#
+
+config LVX_USE_DEMO_CONTEST2026_094_RECORDER_APP
+	bool "Contest 2026 team 094 LVGL WAV recorder"
+	default n
+	depends on GRAPHICS_LVGL && LV_USE_NUTTX
+	depends on VIDEO_FB && FB_UPDATE
+	depends on INPUT_TOUCHSCREEN && LV_USE_NUTTX_TOUCHSCREEN
+	depends on AUDIO && SYSTEM_NXRECORDER && SYSTEM_NXPLAYER
+	depends on D13X_SDMC1 && FS_FATFS
+	---help---
+		Enable the recorder NSH command. It opens a touch LVGL UI,
+		records WAV files to /data/sdcard, plays the latest recording through
+		/dev/audio/pcm0p, and renders an amplitude waveform.
+
+config LVX_USE_DEMO_CONTEST2026_094_RECORDER_STACKSIZE
+	int "Recorder UI task stack size"
+	default 16384
+	depends on LVX_USE_DEMO_CONTEST2026_094_RECORDER_APP
+	help
+		Stack size for the recorder LVGL task. LVGL requires at least 8192
+		bytes on NuttX.

@@ -3,19 +3,17 @@
 This command validates the demo88-nor onboard PDM microphones through
 `/dev/audio/pcm0c`. The first capture milestone records mono signed 16-bit
 little-endian PCM at 16 kHz and stores a standard WAV file. The default path
-is `/data/mic.wav`, and the default duration is three seconds.
+is `/sdcard/mic.wav`, and the default duration is three seconds.
 
 ```text
 nsh> mic_test record
 nsh> mic_test play
-nsh> mic_test loop /data/mic.wav 3
+nsh> mic_test loop /sdcard/mic.wav 3
 ```
 
 `loop` records, finalizes the WAV header, prints the resulting file size, and
-plays it through `/dev/audio/pcm0p`. The app accepts both the stock nxrecorder
-raw-PCM output and trees where nxrecorder already emits WAV, so no private
-nxrecorder API is required. Durations are limited to one through five seconds
-so the recording remains bounded for the 1 MiB LittleFS partition.
+plays it through `/dev/audio/pcm0p`. The command refuses to record until
+`/sdcard` is a mounted FAT filesystem.
 
 The capture lower-half uses two 8192-byte DMA periods. Its two explicit D13x
 v1.x descriptors are 32-byte aligned, linked as a ring, and cache-cleaned
